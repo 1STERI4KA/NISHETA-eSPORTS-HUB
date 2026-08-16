@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-
+export const dynamic = "force-dynamic";
 const roleLabels: Record<string, string> = {
   CARRY: "Керри",
   MID: "Мидер",
