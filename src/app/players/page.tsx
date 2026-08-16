@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import PlayerCard from "@/components/PlayerCard";
-
+export const dynamic = "force-dynamic";
 export default async function PlayersPage() {
   const players = await prisma.player.findMany({
     where: { isActive: true },
