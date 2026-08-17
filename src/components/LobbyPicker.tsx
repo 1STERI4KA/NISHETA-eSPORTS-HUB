@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { POSITION_LABELS } from "@/lib/heroes";
 
-interface Props {
-  players: { id: string; nickname: string; mainRole: string | null }[];
-}
+// === ВСТРОЕННЫЕ ДАННЫЕ ГЕРОЕВ ===
+const POSITION_LABELS: Record<number, string> = {
+  1: "Керри",
+  2: "Мидер",
+  3: "Лесник",
+  4: "Софт-саппорт",
+  5: "Хард-саппорт",
+};
 
 const ROLE_TO_POSITION: Record<string, number> = {
   CARRY: 1,
@@ -15,6 +19,10 @@ const ROLE_TO_POSITION: Record<string, number> = {
   SOFT_SUPPORT: 4,
   HARD_SUPPORT: 5,
 };
+
+interface Props {
+  players: { id: string; nickname: string; mainRole: string | null }[];
+}
 
 type Selected = { id: string; nickname: string; position: number };
 
