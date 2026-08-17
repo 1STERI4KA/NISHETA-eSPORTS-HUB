@@ -3,7 +3,8 @@
 const API = "https://api.opendota.com/api";
 
 let heroCache: Record<number, OpenDotaHero> | null = null;
-let itemCache: Record<string, OpenDotaItem> | null = null;
+let itemNameMap: Record<number, string> | null = null; // ID → локализованное имя
+
 const itemPopularityCache = new Map<number, OpenDotaItemPopularity>();
 
 export interface OpenDotaHero {
@@ -14,12 +15,6 @@ export interface OpenDotaHero {
   pub_win?: number;
   pro_pick?: number;
   pro_win?: number;
-}
-
-export interface OpenDotaItem {
-  id: number;
-  name: string;
-  localized_name: string;
 }
 
 export interface OpenDotaItemPopularity {
@@ -52,13 +47,21 @@ export async function getHeroNames(): Promise<Record<number, string>> {
   );
 }
 
-export async function getItems(): Promise<Record<string, OpenDotaItem>> {
-  if (itemCache) return itemCache;
-  const data = await fetchJson<Record<string, OpenDotaItem>>("/constants/items");
-  itemCache = Object.fromEntries(
-    Object.entries(data).filter(([, item]) => item?.id)
+// Загружаем маппинг ID → название предмета
+export async function getItemNames(): Promise<Record<number, string>> {
+  if (itemNameMap) return itemNameMap;
+  // Используем /constants/item_names
+  const data = await fetchJson<Record<string, string>>("/constants/item_names");
+  // data — объект, где ключи — внутренние имена (item_blink), значения — локализованные названия
+  // Но нам нужен маппинг по ID. Лучше использовать /constants/items, где есть id.
+  // Загрузим /constants/items и построим маппинг ID → localized_name
+  const items = await fetchJson<Record<string, { id: number; localized_name: string }>>("/constants/items");
+  itemNameMap = Object.fromEntries(
+    Object.values(items)
+      .filter(item => item.id && item.localized_name)
+      .map(item => [item.id, item.localized_name])
   );
-  return itemCache;
+  return itemNameMap;
 }
 
 export async function getHeroItemPopularity(
@@ -105,23 +108,11 @@ async function getItemsFromMatches(heroId: number, limit = 15): Promise<{
     late: {},
   };
 
-  // В матчах есть поле 'items' – массив из 6 предметов (порядок не важен)
-  // Мы распределяем их примерно по времени: стартовые (0-10 мин), ранние (10-25), основа (25-40), поздние (40+)
-  // Но в API нет времени покупки, поэтому будем считать все предметы просто популярными,
-  // но распределим по категориям условно на основе стоимости (можно упрощённо).
-  // Для простоты мы просто посчитаем все предметы и разобьём по категориям вручную.
-  // Это не идеально, но даст хоть какие-то данные.
-
-  // Альтернатива: использовать `/players/{accountId}/matches` с деталями, но это сложнее.
-  // Сделаем проще: посчитаем общую популярность предметов и разобьём на 4 равные группы по частоте.
-  // Это даст хотя бы приблизительную сборку.
-
   const totalItems: Record<string, number> = {};
   for (const match of matches) {
-    // В ответе /heroes/{heroId}/matches есть поле 'items' – массив ID предметов (числовые)
     const items = match.items || [];
     for (const itemId of items) {
-      const key = String(itemId);
+      const key = String(itemId); // числовой ID как строка
       totalItems[key] = (totalItems[key] || 0) + 1;
     }
   }
@@ -153,28 +144,84 @@ async function getItemsFromMatches(heroId: number, limit = 15): Promise<{
 
 function topItems(
   source: Record<string, number> | undefined,
-  items: Record<string, OpenDotaItem>,
+  itemNames: Record<number, string>, // маппинг ID → имя
   limit: number
 ): HeroBuildItem[] {
   if (!source) return [];
   return Object.entries(source)
-    .map(([internalName, count]) => {
-      // internalName может быть либо строкой-именем (item_blink), либо числовым ID (если из fallback)
-      let item: OpenDotaItem | undefined;
-      if (internalName.startsWith('item_')) {
-        item = items[internalName];
+    .map(([key, count]) => {
+      // key может быть числом (строка) или внутренним именем (item_blink)
+      let id: number;
+      if (key.startsWith('item_')) {
+        // для внутреннего имени нужно найти ID через другой маппинг, но у нас его нет.
+        // Однако для itemPopularity ключи — это внутренние имена.
+        // Мы можем попытаться найти предмет по этому имени через отдельный запрос, но проще использовать числовые ID.
+        // Поэтому для itemPopularity мы тоже можем использовать числовые ID, но они там не приходят.
+        // Лучше изменить подход: если ключ начинается с item_, то мы можем получить id через /constants/items,
+        // но у нас нет такой карты. Мы можем создать карту имя→id.
+        // Давайте поступим проще: если key начинается с item_, мы не можем его обработать, пропускаем.
+        // Но в itemPopularity ключи — это внутренние имена. Значит, мы должны поддерживать оба.
+        // Создадим карту имя→id из /constants/items.
+        // Я добавлю глобальную переменную для этого.
+        return null; // временно
       } else {
-        // Если это число – ищем по id (преобразуем в число)
-        const numericId = Number(internalName);
-        item = Object.values(items).find(i => i.id === numericId);
+        id = Number(key);
       }
+      const name = itemNames[id] ?? `Предмет #${id}`;
       return {
-        id: item?.id ?? 0,
-        name: item?.localized_name ?? internalName.replace(/^item_/, "").replace(/_/g, " ") ?? `Предмет #${internalName}`,
+        id,
+        name,
         count: Number(count) || 0,
       };
     })
-    .filter((item) => item.id > 0 && item.name)
+    .filter((item): item is HeroBuildItem => item !== null && item.id > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
+}
+
+// Нужно также загрузить карту имя→id для поддержки itemPopularity.
+// Создадим отдельную функцию для получения такой карты.
+let itemNameToId: Record<string, number> | null = null;
+
+async function getItemNameToId(): Promise<Record<string, number>> {
+  if (itemNameToId) return itemNameToId;
+  const items = await fetchJson<Record<string, { id: number; localized_name: string }>>("/constants/items");
+  itemNameToId = Object.fromEntries(
+    Object.entries(items)
+      .filter(([, item]) => item.id)
+      .map(([name, item]) => [name, item.id])
+  );
+  return itemNameToId;
+}
+
+// Перепишем topItems с учётом обоих случаев
+async function topItemsAsync(
+  source: Record<string, number> | undefined,
+  itemNames: Record<number, string>,
+  itemNameToIdMap: Record<string, number>,
+  limit: number
+): Promise<HeroBuildItem[]> {
+  if (!source) return [];
+  const result: HeroBuildItem[] = [];
+  for (const [key, count] of Object.entries(source)) {
+    let id: number | undefined;
+    if (key.startsWith('item_')) {
+      // внутреннее имя
+      id = itemNameToIdMap[key];
+    } else {
+      // предположительно числовой ID
+      id = Number(key);
+      if (isNaN(id)) continue;
+    }
+    if (!id) continue;
+    const name = itemNames[id] ?? `Предмет #${id}`;
+    result.push({
+      id,
+      name,
+      count: Number(count) || 0,
+    });
+  }
+  return result
     .sort((a, b) => b.count - a.count)
     .slice(0, limit);
 }
@@ -183,11 +230,10 @@ export async function getHeroBuild(
   heroId: number,
   heroName: string
 ): Promise<HeroBuild> {
-  // Получаем популярность из OpenDota (может быть пустой)
   const popularity = await getHeroItemPopularity(heroId);
-  const items = await getItems();
+  const itemNames = await getItemNames();
+  const itemNameToIdMap = await getItemNameToId();
 
-  // Проверяем, есть ли хоть какие-то данные
   const hasData = !!(
     popularity.start_game_items ||
     popularity.early_game_items ||
@@ -198,38 +244,23 @@ export async function getHeroBuild(
 
   let stages: any;
   if (hasData) {
-    // Используем данные OpenDota
-    stages = {
-      starting: topItems(
-        popularity.start_game_items ?? popularity.popular_items,
-        items,
-        4
-      ),
-      early: topItems(
-        popularity.early_game_items ?? popularity.popular_items,
-        items,
-        4
-      ),
-      mid: topItems(
-        popularity.mid_game_items ?? popularity.popular_items,
-        items,
-        5
-      ),
-      late: topItems(
-        popularity.late_game_items ?? popularity.popular_items,
-        items,
-        5
-      ),
-    };
+    // Используем данные OpenDota (ключи — внутренние имена)
+    const [start, early, mid, late] = await Promise.all([
+      topItemsAsync(popularity.start_game_items ?? popularity.popular_items, itemNames, itemNameToIdMap, 4),
+      topItemsAsync(popularity.early_game_items ?? popularity.popular_items, itemNames, itemNameToIdMap, 4),
+      topItemsAsync(popularity.mid_game_items ?? popularity.popular_items, itemNames, itemNameToIdMap, 5),
+      topItemsAsync(popularity.late_game_items ?? popularity.popular_items, itemNames, itemNameToIdMap, 5),
+    ]);
+    stages = { starting: start, early, mid, late };
   } else {
-    // FALLBACK: берём из матчей
+    // FALLBACK: из матчей (ключи — числовые ID)
     const fallbackItems = await getItemsFromMatches(heroId, 15);
-    stages = {
-      starting: topItems(fallbackItems.start, items, 4),
-      early: topItems(fallbackItems.early, items, 4),
-      mid: topItems(fallbackItems.mid, items, 5),
-      late: topItems(fallbackItems.late, items, 5),
-    };
+    // Используем обычную синхронную версию, так как ключи — числа
+    const start = topItemsSync(fallbackItems.start, itemNames, 4);
+    const early = topItemsSync(fallbackItems.early, itemNames, 4);
+    const mid = topItemsSync(fallbackItems.mid, itemNames, 5);
+    const late = topItemsSync(fallbackItems.late, itemNames, 5);
+    stages = { starting: start, early, mid, late };
   }
 
   return {
@@ -237,6 +268,25 @@ export async function getHeroBuild(
     heroName,
     stages,
   };
+}
+
+// Синхронная версия для числовых ключей
+function topItemsSync(
+  source: Record<string, number> | undefined,
+  itemNames: Record<number, string>,
+  limit: number
+): HeroBuildItem[] {
+  if (!source) return [];
+  return Object.entries(source)
+    .map(([key, count]) => {
+      const id = Number(key);
+      if (isNaN(id)) return null;
+      const name = itemNames[id] ?? `Предмет #${id}`;
+      return { id, name, count: Number(count) || 0 };
+    })
+    .filter((item): item is HeroBuildItem => item !== null && item.id > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
 }
 
 export interface OpenDotaMatchSummary {
