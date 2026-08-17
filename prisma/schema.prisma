@@ -18,11 +18,41 @@ model Player {
   avatarUrl   String?
   mainRole    Role?
   secondaryRoles Role[]
-  steamId     String?  @unique // заполняется в Phase 2 при привязке Steam
+  steamId     String?  @unique // Steam64 ID или временно vanity-имя до первой синхронизации
   bio         String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  matches     MatchPlayer[]
+}
+
+model Match {
+  id         String        @id // Dota match_id как строка
+  startTime  DateTime
+  duration   Int           // секунды
+  radiantWin Boolean
+  createdAt  DateTime      @default(now())
+  players    MatchPlayer[]
+}
+
+model MatchPlayer {
+  id        String   @id @default(cuid())
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id])
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id])
+  heroId    Int
+  heroName  String
+  isRadiant Boolean
+  win       Boolean
+  kills     Int
+  deaths    Int
+  assists   Int
+  gpm       Int
+  xpm       Int
+  lastHits  Int
+
+  @@unique([matchId, playerId])
 }
 
 enum Role {
