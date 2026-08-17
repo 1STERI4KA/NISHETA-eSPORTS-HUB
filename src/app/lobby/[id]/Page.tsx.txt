@@ -7,7 +7,6 @@ import ArchiveLobbyButton from "@/components/ArchiveLobbyButton";
 
 export const dynamic = "force-dynamic";
 
-// === ВСТРОЕННЫЕ ДАННЫЕ ===
 const POSITION_LABELS: Record<number, string> = {
   1: "Керри",
   2: "Мидер",
@@ -63,7 +62,6 @@ function buildForHero(heroName: string | null): string[] | null {
   if (heroName && HERO_BUILDS[heroName]) return HERO_BUILDS[heroName];
   return null;
 }
-// =======================
 
 export default async function LobbyPage({ params }: { params: { id: string } }) {
   const lobby = await prisma.lobby.findUnique({
