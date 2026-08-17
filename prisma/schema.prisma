@@ -41,7 +41,9 @@ model LobbyPlayer {
   playerId String
   player   Player  @relation(fields: [playerId], references: [id])
   position Int?    // 1-5
-  heroName String?
+ team       String?
+ready      Boolean @default(false)
+heroName String?
   buildItems String?
 
   @@unique([lobbyId, playerId])
