@@ -1,10 +1,8 @@
-// OpenDota integration.
-// Base hero data + item popularity are cached in-process to avoid hammering the public API.
+// OpenDota integration with fallback to match items when itemPopularity is empty.
 
 const API = "https://api.opendota.com/api";
 
 let heroCache: Record<number, OpenDotaHero> | null = null;
-// items теперь хранятся по внутреннему имени (например, "item_blink")
 let itemCache: Record<string, OpenDotaItem> | null = null;
 const itemPopularityCache = new Map<number, OpenDotaItemPopularity>();
 
@@ -20,12 +18,12 @@ export interface OpenDotaHero {
 
 export interface OpenDotaItem {
   id: number;
-  name: string;          // внутреннее имя, например "item_blink"
-  localized_name: string; // отображаемое имя, например "Blink Dagger"
+  name: string;
+  localized_name: string;
 }
 
 export interface OpenDotaItemPopularity {
-  start_game_items?: Record<string, number>;   // ключи — внутренние имена
+  start_game_items?: Record<string, number>;
   early_game_items?: Record<string, number>;
   mid_game_items?: Record<string, number>;
   late_game_items?: Record<string, number>;
@@ -57,10 +55,8 @@ export async function getHeroNames(): Promise<Record<number, string>> {
 export async function getItems(): Promise<Record<string, OpenDotaItem>> {
   if (itemCache) return itemCache;
   const data = await fetchJson<Record<string, OpenDotaItem>>("/constants/items");
-  // оставляем ключи как есть (внутренние имена)
   itemCache = Object.fromEntries(
-    Object.entries(data)
-      .filter(([, item]) => item?.id)
+    Object.entries(data).filter(([, item]) => item?.id)
   );
   return itemCache;
 }
@@ -78,8 +74,8 @@ export async function getHeroItemPopularity(
 }
 
 export interface HeroBuildItem {
-  id: number;          // числовой ID для ссылки
-  name: string;        // отображаемое имя
+  id: number;
+  name: string;
   count: number;
 }
 
@@ -94,15 +90,84 @@ export interface HeroBuild {
   };
 }
 
+// ===== FALLBACK: берём предметы из последних матчей героя =====
+async function getItemsFromMatches(heroId: number, limit = 15): Promise<{
+  start: Record<string, number>;
+  early: Record<string, number>;
+  mid: Record<string, number>;
+  late: Record<string, number>;
+}> {
+  const matches = await fetchJson<any[]>(`/heroes/${heroId}/matches?limit=${limit}`);
+  const itemCounts: Record<string, Record<string, number>> = {
+    start: {},
+    early: {},
+    mid: {},
+    late: {},
+  };
+
+  // В матчах есть поле 'items' – массив из 6 предметов (порядок не важен)
+  // Мы распределяем их примерно по времени: стартовые (0-10 мин), ранние (10-25), основа (25-40), поздние (40+)
+  // Но в API нет времени покупки, поэтому будем считать все предметы просто популярными,
+  // но распределим по категориям условно на основе стоимости (можно упрощённо).
+  // Для простоты мы просто посчитаем все предметы и разобьём по категориям вручную.
+  // Это не идеально, но даст хоть какие-то данные.
+
+  // Альтернатива: использовать `/players/{accountId}/matches` с деталями, но это сложнее.
+  // Сделаем проще: посчитаем общую популярность предметов и разобьём на 4 равные группы по частоте.
+  // Это даст хотя бы приблизительную сборку.
+
+  const totalItems: Record<string, number> = {};
+  for (const match of matches) {
+    // В ответе /heroes/{heroId}/matches есть поле 'items' – массив ID предметов (числовые)
+    const items = match.items || [];
+    for (const itemId of items) {
+      const key = String(itemId);
+      totalItems[key] = (totalItems[key] || 0) + 1;
+    }
+  }
+
+  // Сортируем по частоте
+  const sorted = Object.entries(totalItems)
+    .sort((a, b) => b[1] - a[1])
+    .map(([id, count]) => ({ id, count }));
+
+  // Разбиваем на 4 группы примерно поровну
+  const groups = [
+    sorted.slice(0, Math.ceil(sorted.length * 0.25)),
+    sorted.slice(Math.ceil(sorted.length * 0.25), Math.ceil(sorted.length * 0.5)),
+    sorted.slice(Math.ceil(sorted.length * 0.5), Math.ceil(sorted.length * 0.75)),
+    sorted.slice(Math.ceil(sorted.length * 0.75)),
+  ];
+
+  const stageNames = ['start', 'early', 'mid', 'late'];
+  const result: any = {};
+  for (let i = 0; i < groups.length; i++) {
+    result[stageNames[i]] = Object.fromEntries(
+      groups[i].map(({ id, count }) => [id, count])
+    );
+  }
+
+  return result;
+}
+// ===============================================================
+
 function topItems(
   source: Record<string, number> | undefined,
-  items: Record<string, OpenDotaItem>, // ключи — внутренние имена
+  items: Record<string, OpenDotaItem>,
   limit: number
 ): HeroBuildItem[] {
   if (!source) return [];
   return Object.entries(source)
     .map(([internalName, count]) => {
-      const item = items[internalName]; // ищем по внутреннему имени
+      // internalName может быть либо строкой-именем (item_blink), либо числовым ID (если из fallback)
+      let item: OpenDotaItem | undefined;
+      if (internalName.startsWith('item_')) {
+        item = items[internalName];
+      } else {
+        // Если это число – ищем по id (преобразуем в число)
+        const numericId = Number(internalName);
+        item = Object.values(items).find(i => i.id === numericId);
+      }
       return {
         id: item?.id ?? 0,
         name: item?.localized_name ?? internalName.replace(/^item_/, "").replace(/_/g, " ") ?? `Предмет #${internalName}`,
@@ -118,15 +183,23 @@ export async function getHeroBuild(
   heroId: number,
   heroName: string
 ): Promise<HeroBuild> {
-  const [popularity, items] = await Promise.all([
-    getHeroItemPopularity(heroId),
-    getItems(),
-  ]);
+  // Получаем популярность из OpenDota (может быть пустой)
+  const popularity = await getHeroItemPopularity(heroId);
+  const items = await getItems();
 
-  return {
-    heroId,
-    heroName,
-    stages: {
+  // Проверяем, есть ли хоть какие-то данные
+  const hasData = !!(
+    popularity.start_game_items ||
+    popularity.early_game_items ||
+    popularity.mid_game_items ||
+    popularity.late_game_items ||
+    popularity.popular_items
+  );
+
+  let stages: any;
+  if (hasData) {
+    // Используем данные OpenDota
+    stages = {
       starting: topItems(
         popularity.start_game_items ?? popularity.popular_items,
         items,
@@ -147,7 +220,22 @@ export async function getHeroBuild(
         items,
         5
       ),
-    },
+    };
+  } else {
+    // FALLBACK: берём из матчей
+    const fallbackItems = await getItemsFromMatches(heroId, 15);
+    stages = {
+      starting: topItems(fallbackItems.start, items, 4),
+      early: topItems(fallbackItems.early, items, 4),
+      mid: topItems(fallbackItems.mid, items, 5),
+      late: topItems(fallbackItems.late, items, 5),
+    };
+  }
+
+  return {
+    heroId,
+    heroName,
+    stages,
   };
 }
 
