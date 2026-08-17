@@ -56,7 +56,7 @@ const HERO_BUILDS: Record<string, string[]> = {
   "Shadow Shaman": ["Arcane Boots", "Blink Dagger", "Aghanim's Scepter", "Force Staff", "Aether Lens", "Black King Bar"],
 };
 
-export function buildForHero(heroName: string | null): string[] | null {
+function buildForHero(heroName: string | null): string[] | null {
   if (heroName && HERO_BUILDS[heroName]) return HERO_BUILDS[heroName];
   return null;
 }
