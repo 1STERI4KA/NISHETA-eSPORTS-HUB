@@ -4,7 +4,6 @@ import { getHeroNames } from "@/lib/opendota";
 
 export const dynamic = "force-dynamic";
 
-// Встроенные данные героев (не экспортируем!)
 const HEROES_BY_POSITION: Record<number, string[]> = {
   1: ["Juggernaut", "Phantom Assassin", "Faceless Void", "Anti-Mage", "Troll Warlord", "Sven", "Wraith King", "Terrorblade"],
   2: ["Invoker", "Storm Spirit", "Puck", "Templar Assassin", "Kunkka", "Shadow Fiend", "Queen of Pain", "Zeus"],
