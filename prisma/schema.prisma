@@ -24,6 +24,26 @@ model Player {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   matches     MatchPlayer[]
+  lobbyEntries LobbyPlayer[]
+}
+
+model Lobby {
+  id        String        @id @default(cuid())
+  createdAt DateTime      @default(now())
+  status    String        @default("active") // active | archived
+  players   LobbyPlayer[]
+}
+
+model LobbyPlayer {
+  id       String  @id @default(cuid())
+  lobbyId  String
+  lobby    Lobby   @relation(fields: [lobbyId], references: [id])
+  playerId String
+  player   Player  @relation(fields: [playerId], references: [id])
+  position Int?    // 1-5
+  heroName String?
+
+  @@unique([lobbyId, playerId])
 }
 
 model Match {

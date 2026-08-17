@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { formatDuration, formatDate } from "@/lib/format";
 import SyncButton from "@/components/SyncButton";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,12 @@ export default async function DashboardPage() {
   const players = await prisma.player.findMany({
     where: { isActive: true },
     orderBy: { createdAt: "asc" },
+  });
+
+  const latestLobby = await prisma.lobby.findFirst({
+    where: { status: "active" },
+    orderBy: { createdAt: "desc" },
+    include: { players: { include: { player: true } } },
   });
 
   const recentMatchPlayers = await prisma.matchPlayer.findMany({
@@ -55,6 +62,44 @@ export default async function DashboardPage() {
           Статистика, лобби, рандомайзеры и внутренние приколы команды.
           Снаружи — организация. Внутри — семья.
         </p>
+      </section>
+
+      {/* Текущее лобби */}
+      <section className="panel p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="eyebrow">Текущее лобби</h2>
+          <Link
+            href="/lobby"
+            className="rounded-sm border border-brass/40 bg-brass/10 px-3 py-1.5 font-mono text-xs text-brass-bright transition-colors hover:bg-brass/20"
+          >
+            Создать лобби
+          </Link>
+        </div>
+        {latestLobby ? (
+          <div className="space-y-2">
+            <p className="font-mono text-xs text-muted">
+              {latestLobby.players.length} игроков ·{" "}
+              {new Date(latestLobby.createdAt).toLocaleString("ru-RU")}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {latestLobby.players.map((lp) => (
+                <span key={lp.id} className="ribbon">
+                  {lp.player.nickname}
+                </span>
+              ))}
+            </div>
+            <Link
+              href={`/lobby/${latestLobby.id}`}
+              className="inline-block font-mono text-xs text-brass underline underline-offset-2"
+            >
+              Открыть лобби →
+            </Link>
+          </div>
+        ) : (
+          <p className="font-mono text-sm text-muted">
+            Лобби ещё не создано. Нажми "Создать лобби" выше.
+          </p>
+        )}
       </section>
 
       {/* Синхронизация */}
