@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { formatDuration, formatDate } from "@/lib/format";
+import { getNishetaGroupStats } from "@/lib/nisheta-matches";
 import SyncButton from "@/components/SyncButton";
 import Link from "next/link";
 
@@ -23,17 +24,8 @@ export default async function DashboardPage() {
     include: { match: true, player: true },
   });
 
-  const totalMatches = await prisma.matchPlayer.count();
-  const totalWins = await prisma.matchPlayer.count({ where: { win: true } });
-  const groupWinrate = totalMatches > 0 ? Math.round((totalWins / totalMatches) * 100) : null;
-
-  const heroCounts = await prisma.matchPlayer.groupBy({
-    by: ["heroName"],
-    _count: { heroName: true },
-    orderBy: { _count: { heroName: "desc" } },
-    take: 1,
-  });
-  const topHero = heroCounts[0]?.heroName ?? null;
+  const storedMatchCount = await prisma.match.count();
+  const nisheta = await getNishetaGroupStats();
 
   // Форма игроков: винрейт по последним матчам каждого
   const playerForm = await Promise.all(
@@ -107,7 +99,8 @@ export default async function DashboardPage() {
         <div>
           <h2 className="eyebrow mb-1">Данные Dota 2</h2>
           <p className="font-mono text-xs text-muted">
-            Матчей в базе: {totalMatches}. Нажми, чтобы подтянуть новые игры из OpenDota.
+            В базе уникальных матчей: {storedMatchCount}. NISHETA матчей: {nisheta.matchCount}.
+            Нажми, чтобы подтянуть новые игры из OpenDota.
           </p>
         </div>
         <SyncButton />
@@ -145,17 +138,26 @@ export default async function DashboardPage() {
         <section className="panel p-6">
           <h2 className="eyebrow mb-4">Групповая статистика</h2>
           <dl className="grid grid-cols-2 gap-y-3 font-mono text-sm">
-            <dt className="text-muted">Матчей сыграно</dt>
-            <dd className="text-right text-parchment">{totalMatches || "—"}</dd>
+            <dt className="text-muted">NISHETA матчей</dt>
+            <dd className="text-right text-parchment">{nisheta.matchCount || "—"}</dd>
+            <dt className="text-muted">Победы / поражения</dt>
+            <dd className="text-right text-parchment">
+              {nisheta.matchCount > 0 ? `${nisheta.wins} / ${nisheta.losses}` : "—"}
+            </dd>
             <dt className="text-muted">Винрейт группы</dt>
             <dd className="text-right text-parchment">
-              {groupWinrate !== null ? `${groupWinrate}%` : "—"}
+              {nisheta.winrate !== null ? `${nisheta.winrate}%` : "—"}
             </dd>
             <dt className="text-muted">Топ герой</dt>
-            <dd className="text-right text-parchment">{topHero ?? "—"}</dd>
+            <dd className="text-right text-parchment">{nisheta.topHero ?? "—"}</dd>
             <dt className="text-muted">Текущий стрик</dt>
             <dd className="text-right text-parchment">—</dd>
           </dl>
+          {nisheta.mixed > 0 && (
+            <p className="mt-3 font-mono text-xs text-muted">
+              {nisheta.mixed} матч(ей) с равным числом своих на обеих сторонах не входят в винрейт.
+            </p>
+          )}
         </section>
       </div>
 
