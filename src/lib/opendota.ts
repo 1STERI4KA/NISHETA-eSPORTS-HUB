@@ -20,6 +20,7 @@ export interface OpenDotaHero {
 export interface OpenDotaItem {
   id: number;
   name?: string;
+  dname?: string;          // ← ЭТО ПОЛЕ ДОБАВЛЕНО
   localized_name?: string;
 }
 
@@ -106,6 +107,7 @@ function topItems(
       return {
         id: numericId,
         name:
+          item?.dname ??                    // ← теперь ищем dname первым
           item?.localized_name ??
           item?.name?.replace(/^item_/, "").replace(/_/g, " ") ??
           `Предмет #${numericId}`,
