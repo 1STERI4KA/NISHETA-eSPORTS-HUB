@@ -4,7 +4,8 @@
 const API = "https://api.opendota.com/api";
 
 let heroCache: Record<number, OpenDotaHero> | null = null;
-let itemCache: Record<number, OpenDotaItem> | null = null;
+// items теперь хранятся по внутреннему имени (например, "item_blink")
+let itemCache: Record<string, OpenDotaItem> | null = null;
 const itemPopularityCache = new Map<number, OpenDotaItemPopularity>();
 
 export interface OpenDotaHero {
@@ -19,13 +20,12 @@ export interface OpenDotaHero {
 
 export interface OpenDotaItem {
   id: number;
-  name?: string;
-  dname?: string;          // ← ЭТО ПОЛЕ ДОБАВЛЕНО
-  localized_name?: string;
+  name: string;          // внутреннее имя, например "item_blink"
+  localized_name: string; // отображаемое имя, например "Blink Dagger"
 }
 
 export interface OpenDotaItemPopularity {
-  start_game_items?: Record<string, number>;
+  start_game_items?: Record<string, number>;   // ключи — внутренние имена
   early_game_items?: Record<string, number>;
   mid_game_items?: Record<string, number>;
   late_game_items?: Record<string, number>;
@@ -54,13 +54,13 @@ export async function getHeroNames(): Promise<Record<number, string>> {
   );
 }
 
-export async function getItems(): Promise<Record<number, OpenDotaItem>> {
+export async function getItems(): Promise<Record<string, OpenDotaItem>> {
   if (itemCache) return itemCache;
   const data = await fetchJson<Record<string, OpenDotaItem>>("/constants/items");
+  // оставляем ключи как есть (внутренние имена)
   itemCache = Object.fromEntries(
     Object.entries(data)
       .filter(([, item]) => item?.id)
-      .map(([id, item]) => [Number(id), item])
   );
   return itemCache;
 }
@@ -78,8 +78,8 @@ export async function getHeroItemPopularity(
 }
 
 export interface HeroBuildItem {
-  id: number;
-  name: string;
+  id: number;          // числовой ID для ссылки
+  name: string;        // отображаемое имя
   count: number;
 }
 
@@ -96,21 +96,16 @@ export interface HeroBuild {
 
 function topItems(
   source: Record<string, number> | undefined,
-  items: Record<number, OpenDotaItem>,
+  items: Record<string, OpenDotaItem>, // ключи — внутренние имена
   limit: number
 ): HeroBuildItem[] {
   if (!source) return [];
   return Object.entries(source)
-    .map(([id, count]) => {
-      const numericId = Number(id);
-      const item = items[numericId];
+    .map(([internalName, count]) => {
+      const item = items[internalName]; // ищем по внутреннему имени
       return {
-        id: numericId,
-        name:
-          item?.dname ??                    // ← теперь ищем dname первым
-          item?.localized_name ??
-          item?.name?.replace(/^item_/, "").replace(/_/g, " ") ??
-          `Предмет #${numericId}`,
+        id: item?.id ?? 0,
+        name: item?.localized_name ?? internalName.replace(/^item_/, "").replace(/_/g, " ") ?? `Предмет #${internalName}`,
         count: Number(count) || 0,
       };
     })
