@@ -73,15 +73,22 @@ export default function HeroBuildButton({ heroName }: { heroName: string }) {
                 <ul className="space-y-1">
                   {build.stages[key].map((item) => (
                     <li key={item.id} className="font-mono text-xs text-parchment">
-                      {item.name}
+                      <span>{item.name}</span>
+                      <span className="ml-2 text-muted">×{item.count.toLocaleString("ru-RU")}</span>
                     </li>
                   ))}
                   {!build.stages[key].length && (
-                    <li className="font-mono text-xs text-muted">нет данных</li>
+                    <li className="font-mono text-xs text-muted">OpenDota пока не отдал предметы</li>
                   )}
                 </ul>
               </div>
             ))}
+          {build &&
+            !Object.values(build.stages).some((stage) => stage.length > 0) && (
+              <p className="sm:col-span-2 lg:col-span-4 font-mono text-xs text-muted">
+                Для этого героя OpenDota сейчас не вернул статистику предметов.
+              </p>
+            )}
         </div>
       )}
     </div>

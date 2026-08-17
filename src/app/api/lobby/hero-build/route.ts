@@ -11,8 +11,12 @@ export async function GET(req: Request) {
     }
 
     const heroes = await getHeroes();
+    const normalized = heroName.trim().toLowerCase();
     const hero = Object.values(heroes).find(
-      (item) => item.localized_name.toLowerCase() === heroName.toLowerCase()
+      (item) =>
+        item.localized_name.trim().toLowerCase() === normalized ||
+        item.localized_name.trim().toLowerCase().includes(normalized) ||
+        normalized.includes(item.localized_name.trim().toLowerCase())
     );
 
     if (!hero) {

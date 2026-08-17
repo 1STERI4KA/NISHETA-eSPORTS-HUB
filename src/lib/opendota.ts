@@ -130,10 +130,26 @@ export async function getHeroBuild(
     heroId,
     heroName,
     stages: {
-      starting: topItems(popularity.start_game_items, items, 4),
-      early: topItems(popularity.early_game_items, items, 4),
-      mid: topItems(popularity.mid_game_items, items, 5),
-      late: topItems(popularity.late_game_items, items, 5),
+      starting: topItems(
+        popularity.start_game_items ?? popularity.popular_items,
+        items,
+        4
+      ),
+      early: topItems(
+        popularity.early_game_items ?? popularity.popular_items,
+        items,
+        4
+      ),
+      mid: topItems(
+        popularity.mid_game_items ?? popularity.popular_items,
+        items,
+        5
+      ),
+      late: topItems(
+        popularity.late_game_items ?? popularity.popular_items,
+        items,
+        5
+      ),
     },
   };
 }
