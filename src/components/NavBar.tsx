@@ -3,10 +3,16 @@ import Link from "next/link";
 const primaryLinks = [
   { href: "/", label: "Дашборд" },
   { href: "/players", label: "Игроки" },
-  { href: "/lobby", label: "Лобби" },
 ];
 
-const soonLinks = ["Dota 2", "Рандомайзер", "Челленджи", "Рейтинг", "AI Coach"];
+const soonLinks = [
+  "Dota 2",
+  "Лобби",
+  "Рандомайзер",
+  "Челленджи",
+  "Рейтинг",
+  "AI Coach",
+];
 
 export default function NavBar() {
   return (
