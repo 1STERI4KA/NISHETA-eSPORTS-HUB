@@ -10,7 +10,7 @@ export type NishetaGroupStats = {
 };
 
 // NISHETA MATCH = уникальный Match, в котором есть минимум 2 наших игрока.
-export async function getNishetaGroupStats(): Promise<NishetaGroupStats> {
+export async function getNishetaMatchIds(): Promise<string[]> {
   const grouped = await prisma.matchPlayer.groupBy({
     by: ["matchId"],
     _count: { playerId: true },
@@ -19,7 +19,11 @@ export async function getNishetaGroupStats(): Promise<NishetaGroupStats> {
     },
   });
 
-  const matchIds = grouped.map((row) => row.matchId);
+  return grouped.map((row) => row.matchId);
+}
+
+export async function getNishetaGroupStats(): Promise<NishetaGroupStats> {
+  const matchIds = await getNishetaMatchIds();
   if (matchIds.length === 0) {
     return {
       matchCount: 0,

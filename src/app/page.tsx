@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { formatDuration, formatDate } from "@/lib/format";
 import { getNishetaGroupStats } from "@/lib/nisheta-matches";
+import { getNishetaWeekAwards } from "@/lib/nisheta-week";
 import SyncButton from "@/components/SyncButton";
+import NishetaThisWeek from "@/components/NishetaThisWeek";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +28,7 @@ export default async function DashboardPage() {
 
   const storedMatchCount = await prisma.match.count();
   const nisheta = await getNishetaGroupStats();
+  const week = await getNishetaWeekAwards();
 
   // Форма игроков: винрейт по последним матчам каждого
   const playerForm = await Promise.all(
@@ -55,6 +58,8 @@ export default async function DashboardPage() {
           Снаружи — организация. Внутри — семья.
         </p>
       </section>
+
+      <NishetaThisWeek week={week} />
 
       {/* Текущее лобби */}
       <section className="panel p-6">
@@ -183,27 +188,6 @@ export default async function DashboardPage() {
             </li>
           ))}
         </ol>
-      </section>
-
-      {/* Мемы */}
-      <section>
-        <h2 className="eyebrow mb-4">Мемы недели</h2>
-        <div className="flex flex-wrap gap-3">
-          {[
-            "Больше всего смертей",
-            "Главный фидер",
-            "Больше всего урона",
-            "Худший герой",
-            "Лучший камбэк",
-          ].map((label) => (
-            <span key={label} className="ribbon">
-              {label}: —
-            </span>
-          ))}
-        </div>
-        <p className="mt-3 font-mono text-xs text-muted">
-          Автоматический расчёт мемной статистики появится позже — сейчас это заглушка.
-        </p>
       </section>
     </div>
   );
