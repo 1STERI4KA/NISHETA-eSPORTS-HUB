@@ -42,6 +42,7 @@ model LobbyPlayer {
   player   Player  @relation(fields: [playerId], references: [id])
   position Int?    // 1-5
   heroName String?
+  buildItems String?
 
   @@unique([lobbyId, playerId])
 }
