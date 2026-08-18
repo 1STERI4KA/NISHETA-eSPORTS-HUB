@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import RandomizePositionsButton from "@/components/RandomizePositionsButton";
 import RandomizeTeamsButton from "@/components/RandomizeTeamsButton";
+import BalanceTeamsButton from "@/components/BalanceTeamsButton";
+import ManualTeamButtons from "@/components/ManualTeamButtons";
 import RandomizeHeroButton from "@/components/RandomizeHeroButton";
 import RemovePlayerButton from "@/components/RemovePlayerButton";
 import AddPlayerSelect from "@/components/AddPlayerSelect";
@@ -51,6 +53,7 @@ function PlayerRow({
             <>
               <RandomizeHeroButton lobbyPlayerId={lp.id} />
               <ReadyToggle lobbyPlayerId={lp.id} ready={lp.ready} />
+              <ManualTeamButtons lobbyPlayerId={lp.id} currentTeam={lp.team} />
               <RemovePlayerButton lobbyId={lobbyId} lobbyPlayerId={lp.id} />
             </>
           )}
@@ -63,7 +66,7 @@ function PlayerRow({
   );
 }
 
-export default async function LobbyPage({ params }: { params: { id: string } }) {
+export default async function GameSessionPage({ params }: { params: { id: string } }) {
   const lobby = await prisma.lobby.findUnique({
     where: { id: params.id },
     include: { players: { include: { player: true }, orderBy: { position: "asc" } } },
@@ -80,41 +83,54 @@ export default async function LobbyPage({ params }: { params: { id: string } }) 
   const availablePlayers = allPlayers.filter((p) => !inLobbyIds.has(p.id));
 
   const isArchived = lobby.status === "archived";
+  const readyCount = lobby.players.filter((lp) => lp.ready).length;
+  const totalCount = lobby.players.length;
+  const allReady = totalCount > 0 && readyCount === totalCount;
+
+  const status = isArchived ? "РАСПУЩЕНО" : allReady ? "READY" : "WAITING";
+  const statusColor = isArchived
+    ? "text-muted border-ink-line"
+    : allReady
+    ? "text-radiant border-radiant/50 bg-radiant/10"
+    : "text-brass border-brass/40 bg-brass/10";
 
   const radiant = lobby.players.filter((lp) => lp.team === "radiant");
   const dire = lobby.players.filter((lp) => lp.team === "dire");
   const noTeam = lobby.players.filter((lp) => !lp.team);
 
-  const allReady = lobby.players.length > 0 && lobby.players.every((lp) => lp.ready);
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="eyebrow">
-            Лобби · создано {new Date(lobby.createdAt).toLocaleString("ru-RU")}
-            {isArchived ? " · распущено" : ""}
+            NISHETA GAME · создано {new Date(lobby.createdAt).toLocaleString("ru-RU")}
           </p>
           <h1 className="font-display text-3xl text-parchment">
-            {lobby.players.length} игроков
+            {totalCount} игроков · READY {readyCount}/{totalCount}
           </h1>
         </div>
-        {!isArchived && <DisbandLobbyButton lobbyId={lobby.id} />}
-      </div>
-
-      {allReady && !isArchived && (
-        <div className="rounded-sm border border-radiant/50 bg-radiant/10 px-4 py-2 font-mono text-sm text-radiant">
-          Все готовы — можно стартовать!
+        <div className="flex items-center gap-3">
+          <span
+            className={`rounded-sm border px-3 py-1.5 font-mono text-xs ${statusColor}`}
+          >
+            {status}
+          </span>
+          {!isArchived && <DisbandLobbyButton lobbyId={lobby.id} />}
         </div>
-      )}
+      </div>
 
       {!isArchived && (
         <div className="flex flex-wrap items-center gap-3">
           <RandomizePositionsButton lobbyId={lobby.id} />
           <RandomizeTeamsButton lobbyId={lobby.id} />
+          <BalanceTeamsButton lobbyId={lobby.id} />
           <AddPlayerSelect lobbyId={lobby.id} availablePlayers={availablePlayers} />
         </div>
       )}
+      <p className="font-mono text-xs text-muted">
+        Команды: "Рандомайзер команд" — случайно, "Сбалансировать" — по общему винрейту,
+        либо стрелки у каждого игрока — вручную.
+      </p>
 
       {noTeam.length === lobby.players.length ? (
         <div className="panel divide-y divide-ink-line/60">

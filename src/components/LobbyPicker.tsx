@@ -62,18 +62,22 @@ export default function LobbyPicker({ players }: Props) {
         })}
       </div>
 
+      <p className="font-mono text-xs text-brass">
+        {selected.length} / {players.length} ИГРОКОВ
+      </p>
+
       <div className="flex items-center gap-4">
         <button
           onClick={createLobby}
           disabled={selected.length < 2 || loading}
           className="rounded-sm border border-brass/40 bg-brass/10 px-4 py-2 font-mono text-xs text-brass-bright transition-colors hover:bg-brass/20 disabled:opacity-40"
         >
-          {loading ? "Создание..." : `Создать лобби (${selected.length})`}
+          {loading ? "Создание..." : "СОБРАТЬ КАТКУ"}
         </button>
         {error && <p className="font-mono text-xs text-dire">{error}</p>}
       </div>
       <p className="font-mono text-xs text-muted">
-        Для рандомайзера позиций нужно выбрать ровно 5 игроков — но лобби можно создать с любым количеством.
+        Для рандомайзера позиций нужно выбрать ровно 5 игроков — но игру можно собрать с любым количеством.
       </p>
     </div>
   );
