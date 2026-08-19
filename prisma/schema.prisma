@@ -21,6 +21,9 @@ model Player {
   steamId     String?  @unique // Steam64 ID или временно vanity-имя до первой синхронизации
   bio         String?
   isActive    Boolean  @default(true)
+telegramChatId     String?   @unique
+telegramLinkCode   String?   @unique
+telegramLinkExpiry DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   matches     MatchPlayer[]
