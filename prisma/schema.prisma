@@ -25,8 +25,32 @@ model Player {
   updatedAt   DateTime @updatedAt
   matches     MatchPlayer[]
   lobbyEntries LobbyPlayer[]
+gameCalls       GameCall[]
+gameCallEntries GameCallPlayer[]
+}
+model GameCall {
+  id            String   @id @default(cuid())
+  game          String   // "DOTA2" | "CS2"
+  creatorId     String
+  creator       Player   @relation(fields: [creatorId], references: [id])
+  playersNeeded Int
+  startTime     DateTime
+  note          String?
+  status        String   @default("waiting") // waiting | ready | cancelled | expired
+  createdAt     DateTime @default(now())
+  participants  GameCallPlayer[]
 }
 
+model GameCallPlayer {
+  id         String   @id @default(cuid())
+  gameCallId String
+  gameCall   GameCall @relation(fields: [gameCallId], references: [id])
+  playerId   String
+  player     Player   @relation(fields: [playerId], references: [id])
+  joinedAt   DateTime @default(now())
+
+  @@unique([gameCallId, playerId])
+}
 model Lobby {
   id        String        @id @default(cuid())
   createdAt DateTime      @default(now())
