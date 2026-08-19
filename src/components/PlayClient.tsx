@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import TelegramConnect from "@/components/TelegramConnect";
 
 const STORAGE_KEY = "nisheta_player_id";
 
 interface Player {
   id: string;
   nickname: string;
+  telegramConnected: boolean;
 }
 interface Participant {
   id: string;
@@ -247,6 +249,10 @@ export default function PlayClient({
           </button>
         )}
       </div>
+
+      {me && (
+        <TelegramConnect playerId={me.id} initiallyConnected={me.telegramConnected} />
+      )}
 
       {showForm && me && (
         <CreateForm

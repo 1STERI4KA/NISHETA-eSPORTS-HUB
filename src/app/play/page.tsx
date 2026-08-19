@@ -7,11 +7,16 @@ export const dynamic = "force-dynamic";
 export default async function PlayPage() {
   await expireStaleGameCalls();
 
-  const players = await prisma.player.findMany({
+  const playersRaw = await prisma.player.findMany({
     where: { isActive: true },
     orderBy: { nickname: "asc" },
-    select: { id: true, nickname: true },
+    select: { id: true, nickname: true, telegramChatId: true },
   });
+  const players = playersRaw.map((p) => ({
+    id: p.id,
+    nickname: p.nickname,
+    telegramConnected: Boolean(p.telegramChatId),
+  }));
 
   const gameCalls = await prisma.gameCall.findMany({
     where: { status: { in: ["waiting", "ready"] } },

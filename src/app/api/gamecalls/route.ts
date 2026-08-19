@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { notifyGameCallCreated } from "@/lib/gamecalls";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,13 @@ export async function POST(req: Request) {
       participants: { create: [{ playerId: creatorId }] },
     },
   });
+
+  // Telegram-уведомление не должно ломать создание сбора, даже если Telegram недоступен.
+  try {
+    await notifyGameCallCreated(gameCall.id);
+  } catch (e) {
+    console.error("[gamecalls] Ошибка при отправке Telegram-уведомлений:", e);
+  }
 
   return NextResponse.json({ id: gameCall.id });
 }

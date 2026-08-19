@@ -90,11 +90,15 @@ async function handleCallbackQuery(callbackQuery: any) {
   }
 
   if (action === "join_game") {
-    await joinGameCall(gameCallId, player.id);
-    await answerCallbackQuery(callbackQuery.id, "Записал тебя ✅");
+    const gc = await joinGameCall(gameCallId, player.id);
+    const count = gc?.participants.length ?? 0;
+    const needed = gc?.playersNeeded ?? 0;
+    await answerCallbackQuery(callbackQuery.id, `Записал тебя ✅ (${count}/${needed})`);
   } else if (action === "leave_game") {
-    await leaveGameCall(gameCallId, player.id);
-    await answerCallbackQuery(callbackQuery.id, "Убрал тебя из списка");
+    const gc = await leaveGameCall(gameCallId, player.id);
+    const count = gc?.participants.length ?? 0;
+    const needed = gc?.playersNeeded ?? 0;
+    await answerCallbackQuery(callbackQuery.id, `Убрал тебя из списка (${count}/${needed})`);
   } else {
     await answerCallbackQuery(callbackQuery.id);
   }

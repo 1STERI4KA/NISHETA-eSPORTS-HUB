@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { isTelegramEnabled, sendGameCallNotification } from "@/lib/telegram";
 
 // Минимальная проверка "протухания" сборов — вызывается при загрузке страницы,
 // без отдельного cron/scheduled function.
@@ -54,4 +55,42 @@ export async function leaveGameCall(gameCallId: string, playerId: string) {
   }
 
   return gameCall;
+}
+
+// Уведомляет в Telegram всех игроков (кроме автора) с подключённым Telegram.
+// Ошибки Telegram НЕ должны ломать создание Game Call — только логируются.
+export async function notifyGameCallCreated(gameCallId: string) {
+  if (!isTelegramEnabled()) return;
+
+  try {
+    const gameCall = await prisma.gameCall.findUnique({
+      where: { id: gameCallId },
+      include: { creator: true },
+    });
+    if (!gameCall) return;
+
+    const recipients = await prisma.player.findMany({
+      where: {
+        isActive: true,
+        telegramChatId: { not: null },
+        id: { not: gameCall.creatorId },
+      },
+    });
+
+    for (const player of recipients) {
+      try {
+        await sendGameCallNotification(player.telegramChatId!, {
+          id: gameCall.id,
+          game: gameCall.game,
+          creatorNickname: gameCall.creator.nickname,
+          playersNeeded: gameCall.playersNeeded,
+          startTime: gameCall.startTime,
+        });
+      } catch (e) {
+        console.error(`[telegram] Не удалось отправить игроку ${player.nickname}:`, e);
+      }
+    }
+  } catch (e) {
+    console.error("[telegram] Ошибка notifyGameCallCreated:", e);
+  }
 }
