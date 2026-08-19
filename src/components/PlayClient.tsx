@@ -11,6 +11,7 @@ interface Player {
   nickname: string;
   telegramConnected: boolean;
 }
+
 interface GameCallPlayer {
   id: string;
   nickname: string;
@@ -26,8 +27,18 @@ interface GameCall {
   game: string;
   creatorId: string;
   creator: GameCallPlayer;
+  playersNeeded: number;
+  startTime: string;
+  note: string | null;
+  status: string;
+  participants: Participant[];
+}
 
-const gameLabels: Record<string, string> = { DOTA2: "Dota 2", CS2: "CS2" };
+const gameLabels: Record<string, string> = {
+  DOTA2: "Dota 2",
+  CS2: "CS2",
+};
+
 const statusLabels: Record<string, string> = {
   waiting: "Ждём игроков",
   ready: "Все собрались",
