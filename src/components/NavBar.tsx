@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const primaryLinks = [
   { href: "/", label: "Дашборд" },
-  { href: "/lobby", label: "Играть" },
+  { href: "/play", label: "Играть" },
   { href: "/dota2", label: "Dota 2" },
   { href: "/cs2", label: "CS2" },
   { href: "/nisheta", label: "NISHETA" },
