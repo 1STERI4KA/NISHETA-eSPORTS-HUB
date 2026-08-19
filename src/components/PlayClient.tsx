@@ -11,21 +11,21 @@ interface Player {
   nickname: string;
   telegramConnected: boolean;
 }
+interface GameCallPlayer {
+  id: string;
+  nickname: string;
+}
+
 interface Participant {
   id: string;
-  player: Player;
+  player: GameCallPlayer;
 }
+
 interface GameCall {
   id: string;
   game: string;
   creatorId: string;
-  creator: Player;
-  playersNeeded: number;
-  startTime: string;
-  note: string | null;
-  status: string;
-  participants: Participant[];
-}
+  creator: GameCallPlayer;
 
 const gameLabels: Record<string, string> = { DOTA2: "Dota 2", CS2: "CS2" };
 const statusLabels: Record<string, string> = {
