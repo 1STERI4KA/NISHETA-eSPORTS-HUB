@@ -15,9 +15,9 @@ const sections = [
   },
   {
     title: "Челленджи",
-    description: "Задания на игру с наградами и очками.",
-    href: null,
-    status: "Скоро",
+    description: "Игровые цели со счётчиком — засчитываются автоматически.",
+    href: "/nisheta/challenges",
+    status: "Открыть",
   },
   {
     title: "Hall of Fame / Hall of Shame",
