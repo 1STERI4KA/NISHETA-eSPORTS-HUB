@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { formatDuration, formatDate } from "@/lib/format";
+import { ACHIEVEMENTS, computeUnlockedAchievements } from "@/lib/achievements";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,21 @@ export default async function PlayerProfilePage({
   const avgAssists = totalGames > 0 ? (matches.reduce((s, m) => s + m.assists, 0) / totalGames).toFixed(1) : "—";
   const avgGpm = totalGames > 0 ? Math.round(matches.reduce((s, m) => s + m.gpm, 0) / totalGames) : "—";
   const avgXpm = totalGames > 0 ? Math.round(matches.reduce((s, m) => s + m.xpm, 0) / totalGames) : "—";
+
+  // Ачивки считаем по ВСЕЙ истории, а не только по последним 20 матчам сверху.
+  const achievementRows = await prisma.matchPlayer.findMany({
+    where: { playerId: player.id },
+    select: {
+      heroName: true,
+      kills: true,
+      deaths: true,
+      assists: true,
+      gpm: true,
+      win: true,
+      match: { select: { duration: true } },
+    },
+  });
+  const unlockedAchievements = computeUnlockedAchievements(achievementRows);
 
   return (
     <div className="space-y-8">
@@ -86,12 +102,34 @@ export default async function PlayerProfilePage({
             <dt className="text-muted">Внутренний рейтинг</dt>
             <dd className="text-right text-parchment">{winrate !== null ? `${winrate}%` : "—"}</dd>
             <dt className="text-muted">Достижения</dt>
-            <dd className="text-right text-parchment">0</dd>
+            <dd className="text-right text-parchment">{unlockedAchievements.length} / {ACHIEVEMENTS.length}</dd>
             <dt className="text-muted">Очки челленджей</dt>
             <dd className="text-right text-parchment">0</dd>
           </dl>
         </section>
       </div>
+
+      <section className="panel p-6">
+        <h2 className="eyebrow mb-4">Достижения</h2>
+        <div className="flex flex-wrap gap-2">
+          {ACHIEVEMENTS.map((a) => {
+            const has = unlockedAchievements.includes(a.id);
+            return (
+              <span
+                key={a.id}
+                title={a.description}
+                className={`rounded-sm border px-2 py-1 font-mono text-xs ${
+                  has
+                    ? "border-brass/40 bg-brass/10 text-brass-bright"
+                    : "border-ink-line text-muted/40"
+                }`}
+              >
+                {a.icon} {a.name}
+              </span>
+            );
+          })}
+        </div>
+      </section>
 
       {matches.length > 0 && (
         <section className="panel p-6">
