@@ -23,6 +23,7 @@ export default async function PlayersPage() {
             slug={p.slug}
             nickname={p.nickname}
             mainRole={p.mainRole}
+            avatarUrl={p.avatarUrl}
           />
         ))}
       </div>
