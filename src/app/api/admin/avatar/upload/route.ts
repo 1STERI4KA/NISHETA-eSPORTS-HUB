@@ -1,28 +1,28 @@
 import { put, del } from "@vercel/blob";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 
-function authorized(request: Request) {
+async function authorized() {
   const secret = process.env.ADMIN_SECRET;
   if (!secret) return false;
-  return request.headers.get("x-admin-secret") === secret;
+  const cookieStore = await cookies();
+  return cookieStore.get("nisheta_admin")?.value === secret;
 }
 
 export async function POST(request: Request) {
-  if (!authorized(request)) {
+  if (!(await authorized())) {
     return NextResponse.json({ error: "Не авторизовано" }, { status: 401 });
   }
 
   const form = await request.formData();
   const playerId = form.get("playerId");
   const file = form.get("file");
-
   if (typeof playerId !== "string" || !(file instanceof File)) {
     return NextResponse.json({ error: "Нужны playerId и file" }, { status: 400 });
   }
-
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
     return NextResponse.json({ error: "Только JPG, PNG или WebP" }, { status: 400 });
   }
@@ -30,10 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Максимальный размер фото: 5 МБ" }, { status: 400 });
   }
 
-  const player = await prisma.player.findUnique({
-    where: { id: playerId },
-    select: { avatarUrl: true },
-  });
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { avatarUrl: true } });
   if (!player) return NextResponse.json({ error: "Игрок не найден" }, { status: 404 });
 
   const blob = await put(`players/${playerId}/${crypto.randomUUID()}`, file, {
@@ -42,17 +39,10 @@ export async function POST(request: Request) {
     contentType: file.type,
   });
 
-  await prisma.player.update({
-    where: { id: playerId },
-    data: { avatarUrl: blob.url },
-  });
+  await prisma.player.update({ where: { id: playerId }, data: { avatarUrl: blob.url } });
 
-  if (player.avatarUrl && player.avatarUrl.startsWith("https://")) {
-    try {
-      await del(player.avatarUrl);
-    } catch {
-      // Старый blob не должен ломать успешную замену нового аватара.
-    }
+  if (player.avatarUrl?.startsWith("https://")) {
+    try { await del(player.avatarUrl); } catch {}
   }
 
   return NextResponse.json({ avatarUrl: blob.url });
