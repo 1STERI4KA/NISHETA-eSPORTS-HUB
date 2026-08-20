@@ -18,6 +18,16 @@ const config: Config = {
         },
         radiant: "#3A6B5C",
         dire: "#9C4A3C",
+
+        // Новая светлая премиальная тема (постепенный редизайн)
+        paper: "#FFFFFF",
+        "paper-muted": "#F7F7F5",
+        graphite: "#111111",
+        "graphite-muted": "#6B6B6B",
+        hairline: "#E5E5E3",
+        "accent-dota": "#C23C2A",
+        "accent-success": "#16A34A",
+        "accent-danger": "#DC2626",
       },
       fontFamily: {
         display: ["var(--font-display)"],
