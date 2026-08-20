@@ -21,9 +21,9 @@ const sections = [
   },
   {
     title: "Hall of Fame / Hall of Shame",
-    description: "Лучшие и худшие моменты компании.",
-    href: null,
-    status: "Скоро",
+    description: "Лучшие и худшие моменты компании — тоже считается само.",
+    href: "/nisheta/hall-of-fame",
+    status: "Открыть",
   },
   {
     title: "Мемы",
