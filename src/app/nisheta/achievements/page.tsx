@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { ACHIEVEMENTS, computeUnlockedAchievements } from "@/lib/achievements";
+import AchievementLegend from "@/components/AchievementLegend";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,8 @@ export default async function AchievementsPage() {
           </div>
         ))}
       </div>
+
+      <AchievementLegend />
     </div>
   );
 }

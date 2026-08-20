@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { formatDuration, formatDate } from "@/lib/format";
 import { ACHIEVEMENTS, computeUnlockedAchievements } from "@/lib/achievements";
+import AchievementLegend from "@/components/AchievementLegend";
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +131,8 @@ export default async function PlayerProfilePage({
           })}
         </div>
       </section>
+
+      <AchievementLegend />
 
       {matches.length > 0 && (
         <section className="panel p-6">
