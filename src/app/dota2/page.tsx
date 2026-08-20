@@ -5,9 +5,9 @@ export const dynamic = "force-dynamic";
 const sections = [
   {
     title: "Статистика",
-    description: "Матчи, винрейт группы, форма игроков.",
-    href: "/",
-    status: "На дашборде",
+    description: "Матчи, винрейт группы, лидерборд, топ героев.",
+    href: "/dota2/stats",
+    status: "Открыть",
   },
   {
     title: "Игроки",
