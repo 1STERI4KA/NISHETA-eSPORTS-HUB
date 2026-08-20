@@ -41,7 +41,6 @@ export default async function PlayerProfilePage({
   const avgGpm = totalGames > 0 ? Math.round(matches.reduce((s, m) => s + m.gpm, 0) / totalGames) : "—";
   const avgXpm = totalGames > 0 ? Math.round(matches.reduce((s, m) => s + m.xpm, 0) / totalGames) : "—";
 
-  // Ачивки считаем по ВСЕЙ истории, а не только по последним 20 матчам сверху.
   const achievementRows = await prisma.matchPlayer.findMany({
     where: { playerId: player.id },
     select: {
@@ -59,8 +58,12 @@ export default async function PlayerProfilePage({
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full border border-ink-line bg-ink font-display text-2xl text-brass">
-          {player.nickname.slice(0, 1).toUpperCase()}
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-ink-line bg-ink font-display text-2xl text-brass">
+          {player.avatarUrl ? (
+            <img src={player.avatarUrl} alt={player.nickname} className="h-full w-full object-cover" />
+          ) : (
+            player.nickname.slice(0, 1).toUpperCase()
+          )}
         </div>
         <div>
           <h1 className="font-display text-3xl text-parchment">{player.nickname}</h1>
