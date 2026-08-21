@@ -110,6 +110,8 @@ export default function HeroPortrait() {
       const target = reducedMotion ? RESTING_GAZE : gazeTarget.current;
       const headYaw = THREE.MathUtils.clamp(target.x * 0.48, -0.48, 0.48);
       const headPitch = THREE.MathUtils.clamp(target.y * -0.26, -0.26, 0.26);
+      avatarGroup.rotation.y = THREE.MathUtils.damp(avatarGroup.rotation.y, headYaw * 0.46, 8, 1 / 60);
+      avatarGroup.rotation.x = THREE.MathUtils.damp(avatarGroup.rotation.x, headPitch * 0.3, 8, 1 / 60);
       if (headBone && headRestQuaternion) {
         const offset = new THREE.Quaternion().setFromEuler(new THREE.Euler(headPitch, headYaw, 0, "YXZ"));
         const targetQuaternion = headRestQuaternion.clone().multiply(offset);
