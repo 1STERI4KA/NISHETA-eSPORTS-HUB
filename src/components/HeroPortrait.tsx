@@ -120,6 +120,7 @@ export default function HeroPortrait() {
 
     const head = new THREE.Mesh(new THREE.SphereGeometry(1.16, 64, 52), skinMaterial);
     head.scale.set(0.87, 1.12, 0.88);
+    head.rotation.y = Math.PI;
     head.position.y = 0.28;
     avatar.add(head);
 
