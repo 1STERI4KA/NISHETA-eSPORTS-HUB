@@ -1,16 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
+import { isAdminSession } from "@/lib/admin";
 import AdminAvatarUpload from "@/components/AdminAvatarUpload";
 import AdminLogin from "@/components/AdminLogin";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminAvatarsPage() {
-  const secret = process.env.ADMIN_SECRET;
-  const cookieStore = await cookies();
-  const authorized = !!secret && cookieStore.get("nisheta_admin")?.value === secret;
-
-  if (!authorized) {
+  if (!(await isAdminSession())) {
     return (
       <main className="space-y-6">
         <AdminLogin />

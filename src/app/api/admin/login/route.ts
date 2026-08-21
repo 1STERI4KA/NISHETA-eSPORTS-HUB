@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ADMIN_SESSION_COOKIE, createAdminSessionToken } from "@/lib/admin";
 
 export async function POST(request: Request) {
   const secret = process.env.ADMIN_SECRET;
@@ -10,12 +11,13 @@ export async function POST(request: Request) {
   }
 
   const response = NextResponse.json({ ok: true });
-  response.cookies.set("nisheta_admin", secret, {
+  response.cookies.set(ADMIN_SESSION_COOKIE, createAdminSessionToken(secret), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
+
   return response;
 }

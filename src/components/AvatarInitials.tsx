@@ -1,8 +1,10 @@
 export default function AvatarInitials({
   name,
+  avatarUrl,
   size = "md",
 }: {
   name: string;
+  avatarUrl?: string | null;
   size?: "sm" | "md" | "lg";
 }) {
   const sizeClasses = {
@@ -13,9 +15,13 @@ export default function AvatarInitials({
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-full bg-paper-muted font-medium text-graphite ${sizeClasses}`}
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-paper-muted font-medium text-graphite ${sizeClasses}`}
     >
-      {name.slice(0, 2).toUpperCase()}
+      {avatarUrl ? (
+        <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
+      ) : (
+        name.slice(0, 1).toUpperCase()
+      )}
     </div>
   );
 }

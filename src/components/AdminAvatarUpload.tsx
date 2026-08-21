@@ -29,8 +29,12 @@ export default function AdminAvatarUpload({
         method: "POST",
         body: form,
       });
-      const data = await response.json();
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        avatarUrl?: string;
+      };
       if (!response.ok) throw new Error(data.error || "Не удалось загрузить фото");
+      if (!data.avatarUrl) throw new Error("Сервер не вернул адрес фотографии");
       setAvatarUrl(data.avatarUrl);
       setMessage("Фото установлено");
     } catch (error) {

@@ -12,10 +12,12 @@ const roleLabels: Record<string, string> = {
 export default function PlayerCard({
   slug,
   nickname,
+  avatarUrl,
   mainRole,
 }: {
   slug: string;
   nickname: string;
+  avatarUrl: string | null;
   mainRole: string | null;
 }) {
   return (
@@ -23,7 +25,7 @@ export default function PlayerCard({
       href={`/players/${slug}`}
       className="group flex flex-col gap-3 rounded-lg border border-hairline bg-paper p-5 transition-colors hover:border-graphite/30"
     >
-      <AvatarInitials name={nickname} size="lg" />
+      <AvatarInitials name={nickname} avatarUrl={avatarUrl} size="lg" />
       <div>
         <p className="text-sm font-medium text-graphite">{nickname}</p>
         <p className="text-xs text-graphite-muted">

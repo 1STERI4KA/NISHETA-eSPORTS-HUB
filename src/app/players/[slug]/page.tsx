@@ -59,7 +59,7 @@ export default async function PlayerProfilePage({
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
-        <AvatarInitials name={player.nickname} size="lg" />
+        <AvatarInitials name={player.nickname} avatarUrl={player.avatarUrl} size="lg" />
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-graphite">{player.nickname}</h1>
           <p className="text-xs text-graphite-muted">
