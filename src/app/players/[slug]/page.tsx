@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { formatDuration, formatDate } from "@/lib/format";
 import { ACHIEVEMENTS, computeUnlockedAchievements } from "@/lib/achievements";
 import AchievementLegend from "@/components/AchievementLegend";
+import AvatarInitials from "@/components/AvatarInitials";
 
 export const dynamic = "force-dynamic";
 
@@ -58,16 +59,10 @@ export default async function PlayerProfilePage({
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-ink-line bg-ink font-display text-2xl text-brass">
-          {player.avatarUrl ? (
-            <img src={player.avatarUrl} alt={player.nickname} className="h-full w-full object-cover" />
-          ) : (
-            player.nickname.slice(0, 1).toUpperCase()
-          )}
-        </div>
+        <AvatarInitials name={player.nickname} size="lg" />
         <div>
-          <h1 className="font-display text-3xl text-parchment">{player.nickname}</h1>
-          <p className="font-mono text-xs text-muted">
+          <h1 className="text-3xl font-semibold tracking-tight text-graphite">{player.nickname}</h1>
+          <p className="text-xs text-graphite-muted">
             {player.realName ? `${player.realName} · ` : ""}
             {player.mainRole ? roleLabels[player.mainRole] : "Роль не указана"}
             {player.steamId ? " · Steam привязан" : " · Steam не привязан"}
@@ -76,45 +71,53 @@ export default async function PlayerProfilePage({
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2">
-        <section className="panel p-6">
-          <h2 className="eyebrow mb-4">Dota статистика</h2>
+        <section className="rounded-lg border border-hairline bg-paper p-6">
+          <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-graphite-muted">
+            Dota статистика
+          </h2>
           {totalGames === 0 ? (
-            <p className="font-mono text-sm text-muted">
-              Пока нет синхронизированных матчей. Нажми "Обновить матчи" на дашборде.
+            <p className="text-sm text-graphite-muted">
+              Пока нет синхронизированных матчей.
             </p>
           ) : (
-            <dl className="grid grid-cols-2 gap-y-3 font-mono text-sm">
-              <dt className="text-muted">Матчей (посл.)</dt>
-              <dd className="text-right text-parchment">{totalGames}</dd>
-              <dt className="text-muted">Винрейт</dt>
-              <dd className="text-right text-parchment">{winrate}%</dd>
-              <dt className="text-muted">Ср. K / D / A</dt>
-              <dd className="text-right text-parchment">
+            <dl className="grid grid-cols-2 gap-y-3 text-sm">
+              <dt className="text-graphite-muted">Матчей (посл.)</dt>
+              <dd className="text-right text-graphite">{totalGames}</dd>
+              <dt className="text-graphite-muted">Винрейт</dt>
+              <dd className="text-right text-graphite">{winrate}%</dd>
+              <dt className="text-graphite-muted">Ср. K / D / A</dt>
+              <dd className="text-right text-graphite">
                 {avgKills} / {avgDeaths} / {avgAssists}
               </dd>
-              <dt className="text-muted">Ср. GPM / XPM</dt>
-              <dd className="text-right text-parchment">
+              <dt className="text-graphite-muted">Ср. GPM / XPM</dt>
+              <dd className="text-right text-graphite">
                 {avgGpm} / {avgXpm}
               </dd>
             </dl>
           )}
         </section>
 
-        <section className="panel p-6">
-          <h2 className="eyebrow mb-4">Внутренняя статистика</h2>
-          <dl className="grid grid-cols-2 gap-y-3 font-mono text-sm">
-            <dt className="text-muted">Внутренний рейтинг</dt>
-            <dd className="text-right text-parchment">{winrate !== null ? `${winrate}%` : "—"}</dd>
-            <dt className="text-muted">Достижения</dt>
-            <dd className="text-right text-parchment">{unlockedAchievements.length} / {ACHIEVEMENTS.length}</dd>
-            <dt className="text-muted">Очки челленджей</dt>
-            <dd className="text-right text-parchment">0</dd>
+        <section className="rounded-lg border border-hairline bg-paper p-6">
+          <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-graphite-muted">
+            Внутренняя статистика
+          </h2>
+          <dl className="grid grid-cols-2 gap-y-3 text-sm">
+            <dt className="text-graphite-muted">Внутренний рейтинг</dt>
+            <dd className="text-right text-graphite">{winrate !== null ? `${winrate}%` : "—"}</dd>
+            <dt className="text-graphite-muted">Достижения</dt>
+            <dd className="text-right text-graphite">
+              {unlockedAchievements.length} / {ACHIEVEMENTS.length}
+            </dd>
+            <dt className="text-graphite-muted">Очки челленджей</dt>
+            <dd className="text-right text-graphite">0</dd>
           </dl>
         </section>
       </div>
 
-      <section className="panel p-6">
-        <h2 className="eyebrow mb-4">Достижения</h2>
+      <section className="rounded-lg border border-hairline bg-paper p-6">
+        <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-graphite-muted">
+          Достижения
+        </h2>
         <div className="flex flex-wrap gap-2">
           {ACHIEVEMENTS.map((a) => {
             const has = unlockedAchievements.includes(a.id);
@@ -122,10 +125,10 @@ export default async function PlayerProfilePage({
               <span
                 key={a.id}
                 title={a.description}
-                className={`rounded-sm border px-2 py-1 font-mono text-xs ${
+                className={`rounded-md border px-2 py-1 text-xs ${
                   has
-                    ? "border-brass/40 bg-brass/10 text-brass-bright"
-                    : "border-ink-line text-muted/40"
+                    ? "border-graphite/20 bg-paper-muted text-graphite"
+                    : "border-hairline text-graphite-muted/50"
                 }`}
               >
                 {a.icon} {a.name}
@@ -138,19 +141,21 @@ export default async function PlayerProfilePage({
       <AchievementLegend />
 
       {matches.length > 0 && (
-        <section className="panel p-6">
-          <h2 className="eyebrow mb-4">Последние матчи</h2>
+        <section className="rounded-lg border border-hairline bg-paper p-6">
+          <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-graphite-muted">
+            Последние матчи
+          </h2>
           <ul className="space-y-3">
             {matches.map((m) => (
               <li
                 key={m.id}
-                className="flex items-center justify-between border-b border-ink-line/60 pb-2 font-mono text-xs last:border-none"
+                className="flex items-center justify-between border-b border-hairline pb-2 text-xs last:border-none"
               >
-                <span className="text-parchment">{m.heroName}</span>
-                <span className="text-muted">
+                <span className="text-graphite">{m.heroName}</span>
+                <span className="text-graphite-muted">
                   {m.kills}/{m.deaths}/{m.assists}
                 </span>
-                <span className={m.win ? "text-radiant" : "text-dire"}>
+                <span className={m.win ? "text-accent-success" : "text-accent-danger"}>
                   {m.win ? "Победа" : "Поражение"} · {formatDuration(m.match.duration)} ·{" "}
                   {formatDate(m.match.startTime)}
                 </span>

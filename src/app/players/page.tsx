@@ -12,8 +12,8 @@ export default async function PlayersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="eyebrow">Состав</p>
-        <h1 className="font-display text-3xl text-parchment">Игроки</h1>
+        <p className="text-xs font-medium uppercase tracking-wide text-graphite-muted">Состав</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-graphite">Игроки</h1>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
@@ -23,7 +23,6 @@ export default async function PlayersPage() {
             slug={p.slug}
             nickname={p.nickname}
             mainRole={p.mainRole}
-            avatarUrl={p.avatarUrl}
           />
         ))}
       </div>

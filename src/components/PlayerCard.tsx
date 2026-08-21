@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AvatarInitials from "@/components/AvatarInitials";
 
 const roleLabels: Record<string, string> = {
   CARRY: "Керри",
@@ -12,30 +13,20 @@ export default function PlayerCard({
   slug,
   nickname,
   mainRole,
-  avatarUrl,
 }: {
   slug: string;
   nickname: string;
   mainRole: string | null;
-  avatarUrl: string | null;
 }) {
   return (
     <Link
       href={`/players/${slug}`}
-      className="panel group flex flex-col gap-3 p-5 transition-colors hover:border-brass/40"
+      className="group flex flex-col gap-3 rounded-lg border border-hairline bg-paper p-5 transition-colors hover:border-graphite/30"
     >
-      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-ink-line bg-ink font-display text-lg text-brass">
-        {avatarUrl ? (
-          <img src={avatarUrl} alt={nickname} className="h-full w-full object-cover" />
-        ) : (
-          nickname.slice(0, 1).toUpperCase()
-        )}
-      </div>
+      <AvatarInitials name={nickname} size="lg" />
       <div>
-        <p className="font-display text-base text-parchment group-hover:text-brass-bright">
-          {nickname}
-        </p>
-        <p className="font-mono text-xs text-muted">
+        <p className="text-sm font-medium text-graphite">{nickname}</p>
+        <p className="text-xs text-graphite-muted">
           {mainRole ? roleLabels[mainRole] : "Роль не указана"}
         </p>
       </div>
