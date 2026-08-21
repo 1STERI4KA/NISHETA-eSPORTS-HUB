@@ -51,7 +51,7 @@ export default function HeroPortrait() {
     scene.add(fillLight);
 
     const avatarGroup = new THREE.Group();
-    avatarGroup.position.set(0.96, 0.08, 0);
+    avatarGroup.position.set(0.36, 0.08, 0);
     scene.add(avatarGroup);
 
     let headBone: THREE.Bone | null = null;
