@@ -7,6 +7,7 @@ import { getNishetaWeekAwards } from "@/lib/nisheta-week";
 import SyncButton from "@/components/SyncButton";
 import NishetaThisWeek from "@/components/NishetaThisWeek";
 import DashboardPlayerWidgets from "@/components/DashboardPlayerWidgets";
+import HeroPortrait from "@/components/HeroPortrait";
 
 export const dynamic = "force-dynamic";
 
@@ -74,31 +75,9 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-7 lg:space-y-8">
       <section className="grid gap-5 xl:grid-cols-12">
-        <article className="surface-dark relative min-h-[320px] overflow-hidden p-7 sm:p-9 xl:col-span-8 xl:min-h-[370px]">
-          <div className="absolute -right-24 top-8 h-72 w-72 rounded-full border border-white/10" />
-          <div className="absolute right-10 top-12 hidden h-48 w-48 rounded-full bg-white/[0.035] blur-2xl sm:block" />
-          <div className="relative flex h-full flex-col justify-between">
-            <div>
-              <div className="mb-7 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/50">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#e5b46d]" />
-                NISHETA eSPORTS HUB
-              </div>
-              <h1 className="max-w-lg text-[clamp(2.5rem,5vw,4.65rem)] font-semibold leading-[0.94] tracking-[-0.07em] text-paper">
-                WE PLAY.<br />WE TRACK.<br /><span className="text-white/42">WE WIN.</span>
-              </h1>
-              <p className="mt-6 max-w-sm text-sm leading-6 text-white/55">Твоя команда, живые сборы и статистика — в одном спокойном игровом хабе.</p>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/play" className="inline-flex items-center gap-2 rounded-xl bg-paper px-4 py-2.5 text-xs font-semibold text-graphite transition-transform hover:-translate-y-px">
-                <Gamepad2 size={15} strokeWidth={1.9} />
-                Собрать игру
-              </Link>
-              <Link href="/players" className="inline-flex items-center gap-2 px-2 py-2 text-xs font-semibold text-white/65 transition-colors hover:text-paper">
-                Смотреть состав <ArrowUpRight size={15} strokeWidth={1.8} />
-              </Link>
-            </div>
-          </div>
-        </article>
+        <div className="xl:col-span-8">
+          <HeroPortrait />
+        </div>
 
         <div className="grid gap-5 sm:grid-cols-2 xl:col-span-4 xl:grid-cols-1">
           <section className="surface p-6">
