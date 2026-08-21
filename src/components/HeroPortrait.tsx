@@ -3,247 +3,102 @@
 import Link from "next/link";
 import { ArrowUpRight, Gamepad2 } from "lucide-react";
 import { PointerEvent, useEffect, useRef, useState } from "react";
-import * as THREE from "three";
 
-type GazeTarget = {
-  x: number;
-  y: number;
+type Pose = {
+  rotateX: number;
+  rotateY: number;
+  translateX: number;
+  translateY: number;
+  active: boolean;
 };
 
-const RESTING_GAZE: GazeTarget = { x: 0, y: 0 };
-
-function makeEye() {
-  const eye = new THREE.Group();
-  const eyeWhite = new THREE.Mesh(
-    new THREE.SphereGeometry(0.105, 24, 18),
-    new THREE.MeshPhysicalMaterial({ color: 0xf3f0eb, roughness: 0.24, metalness: 0.02 })
-  );
-  eyeWhite.scale.set(1, 1, 0.62);
-  eye.add(eyeWhite);
-
-  const iris = new THREE.Mesh(
-    new THREE.SphereGeometry(0.048, 20, 16),
-    new THREE.MeshStandardMaterial({ color: 0x827452, roughness: 0.42, metalness: 0.05 })
-  );
-  iris.scale.set(1, 1, 0.26);
-  iris.position.z = 0.073;
-  eye.add(iris);
-
-  const pupil = new THREE.Mesh(
-    new THREE.SphereGeometry(0.021, 18, 14),
-    new THREE.MeshStandardMaterial({ color: 0x12100d, roughness: 0.3 })
-  );
-  pupil.scale.set(1, 1, 0.22);
-  pupil.position.z = 0.087;
-  eye.add(pupil);
-
-  const glint = new THREE.Mesh(
-    new THREE.SphereGeometry(0.008, 12, 10),
-    new THREE.MeshBasicMaterial({ color: 0xffffff })
-  );
-  glint.position.set(-0.012, 0.014, 0.096);
-  eye.add(glint);
-
-  return eye;
-}
+const restingPose: Pose = {
+  rotateX: 0,
+  rotateY: 0,
+  translateX: 0,
+  translateY: 0,
+  active: false,
+};
 
 export default function HeroPortrait() {
   const frameRef = useRef<HTMLElement>(null);
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const gazeTarget = useRef<GazeTarget>(RESTING_GAZE);
-  const [webglReady, setWebglReady] = useState(false);
+  const animationFrame = useRef<number | null>(null);
+  const targetPose = useRef<Pose>(restingPose);
+  const [pose, setPose] = useState<Pose>(restingPose);
+
+  const commitPose = () => {
+    animationFrame.current = null;
+    setPose(targetPose.current);
+  };
+
+  const schedulePose = () => {
+    if (animationFrame.current === null) {
+      animationFrame.current = window.requestAnimationFrame(commitPose);
+    }
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const frame = frameRef.current;
+    if (!frame) return;
+
+    const bounds = frame.getBoundingClientRect();
+    const x = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2;
+    const y = ((event.clientY - bounds.top) / bounds.height - 0.5) * 2;
+
+    targetPose.current = {
+      rotateX: y * -5,
+      rotateY: x * 8,
+      translateX: x * 7,
+      translateY: y * 5,
+      active: true,
+    };
+    schedulePose();
+  };
+
+  const resetPose = () => {
+    targetPose.current = restingPose;
+    schedulePose();
+  };
 
   useEffect(() => {
-    const canvasHost = canvasRef.current;
-    if (!canvasHost) return;
-
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let animationFrame = 0;
-    let disposed = false;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-3, 3, 2.1, -2.1, 0.1, 100);
-    camera.position.set(0, 0.08, 7);
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
-    renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
-    canvasHost.replaceChildren(renderer.domElement);
-
-    const ambient = new THREE.HemisphereLight(0xf0e7d8, 0x0b0e15, 2.7);
-    scene.add(ambient);
-
-    const keyLight = new THREE.DirectionalLight(0xffefdc, 4.2);
-    keyLight.position.set(-3.2, 2.7, 4.5);
-    scene.add(keyLight);
-
-    const rimLight = new THREE.DirectionalLight(0xe5a85b, 5.4);
-    rimLight.position.set(3.5, 1.2, 3.4);
-    scene.add(rimLight);
-
-    const fillLight = new THREE.PointLight(0x83a3c6, 2.1, 8);
-    fillLight.position.set(-2.6, -0.6, 3);
-    scene.add(fillLight);
-
-    const avatar = new THREE.Group();
-    avatar.position.set(1.03, -0.24, 0);
-    scene.add(avatar);
-
-    const skinMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xd3a083,
-      roughness: 0.74,
-      metalness: 0.01,
-      clearcoat: 0.04,
-      clearcoatRoughness: 0.75,
-    });
-
-    const head = new THREE.Mesh(new THREE.SphereGeometry(1.16, 64, 52), skinMaterial);
-    head.scale.set(0.87, 1.12, 0.88);
-    head.position.y = 0.28;
-    avatar.add(head);
-
-    const faceGeometry = new THREE.PlaneGeometry(2.34, 2.64, 48, 54);
-    const facePositions = faceGeometry.attributes.position;
-    for (let index = 0; index < facePositions.count; index += 1) {
-      const x = facePositions.getX(index) / 1.17;
-      const y = facePositions.getY(index) / 1.32;
-      const oval = Math.max(0, 1 - x * x) * Math.max(0, 1 - y * y * 0.52);
-      facePositions.setZ(index, oval * 0.34);
-    }
-    faceGeometry.computeVertexNormals();
-    const faceMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.62, transparent: true, depthWrite: true });
-    const faceSurface = new THREE.Mesh(faceGeometry, faceMaterial);
-    faceSurface.position.set(0, 0.27, 1.23);
-    avatar.add(faceSurface);
-
-    const textureLoader = new THREE.TextureLoader();
-    textureLoader.load("/hero-nisheta-portrait-front.png", (texture) => {
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      faceMaterial.map = texture;
-      faceMaterial.needsUpdate = true;
-    });
-
-    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.43, 0.54, 0.9, 36), skinMaterial);
-    neck.position.set(0, -1.16, -0.02);
-    avatar.add(neck);
-
-    const shoulder = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 24), skinMaterial);
-    shoulder.scale.set(1.48, 0.34, 0.56);
-    shoulder.position.set(0, -1.68, -0.16);
-    avatar.add(shoulder);
-
-    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.15, 24, 18), skinMaterial);
-    nose.scale.set(0.7, 1.25, 1.08);
-    nose.position.set(0, 0.15, 1.0);
-    avatar.add(nose);
-
-    const leftEar = new THREE.Mesh(new THREE.SphereGeometry(0.21, 20, 18), skinMaterial);
-    leftEar.scale.set(0.52, 1, 0.56);
-    leftEar.position.set(-0.94, 0.2, 0.08);
-    avatar.add(leftEar);
-
-    const rightEar = leftEar.clone();
-    rightEar.position.x = 0.94;
-    avatar.add(rightEar);
-
-    const leftEye = makeEye();
-    leftEye.position.set(-0.39, 0.27, 1.64);
-    avatar.add(leftEye);
-
-    const rightEye = makeEye();
-    rightEye.position.set(0.39, 0.27, 1.64);
-    avatar.add(rightEye);
-
-    const resize = () => {
-      const width = Math.max(canvasHost.clientWidth, 1);
-      const height = Math.max(canvasHost.clientHeight, 1);
-      const aspect = width / height;
-      const viewHeight = 4.35;
-      camera.left = -(viewHeight * aspect) / 2;
-      camera.right = (viewHeight * aspect) / 2;
-      camera.top = viewHeight / 2;
-      camera.bottom = -viewHeight / 2;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height, false);
-    };
-
-    const resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(canvasHost);
-    resize();
-    setWebglReady(true);
-
-    const animate = () => {
-      if (disposed) return;
-      const target = reducedMotion ? RESTING_GAZE : gazeTarget.current;
-      const headYaw = THREE.MathUtils.clamp(target.x * 0.46, -0.46, 0.46);
-      const headPitch = THREE.MathUtils.clamp(target.y * -0.28, -0.28, 0.28);
-      const eyeYaw = THREE.MathUtils.clamp(target.x * 0.31, -0.31, 0.31);
-      const eyePitch = THREE.MathUtils.clamp(target.y * -0.2, -0.2, 0.2);
-
-      avatar.rotation.y = THREE.MathUtils.damp(avatar.rotation.y, headYaw, 7, 1 / 60);
-      avatar.rotation.x = THREE.MathUtils.damp(avatar.rotation.x, headPitch, 7, 1 / 60);
-      leftEye.rotation.y = THREE.MathUtils.damp(leftEye.rotation.y, eyeYaw, 12, 1 / 60);
-      leftEye.rotation.x = THREE.MathUtils.damp(leftEye.rotation.x, eyePitch, 12, 1 / 60);
-      rightEye.rotation.y = THREE.MathUtils.damp(rightEye.rotation.y, eyeYaw, 12, 1 / 60);
-      rightEye.rotation.x = THREE.MathUtils.damp(rightEye.rotation.x, eyePitch, 12, 1 / 60);
-
-      renderer.render(scene, camera);
-      animationFrame = window.requestAnimationFrame(animate);
-    };
-    animate();
-
     return () => {
-      disposed = true;
-      window.cancelAnimationFrame(animationFrame);
-      resizeObserver.disconnect();
-      scene.traverse((object) => {
-        if (object instanceof THREE.Mesh) {
-          object.geometry.dispose();
-          const material = object.material;
-          if (Array.isArray(material)) material.forEach((entry) => entry.dispose());
-          else material.dispose();
-        }
-      });
-      renderer.dispose();
-      canvasHost.replaceChildren();
+      if (animationFrame.current !== null) {
+        window.cancelAnimationFrame(animationFrame.current);
+      }
     };
   }, []);
 
-  const updateGaze = (event: PointerEvent<HTMLElement>) => {
-    if (event.pointerType === "touch") return;
-    const frame = frameRef.current;
-    if (!frame) return;
-    const bounds = frame.getBoundingClientRect();
-    gazeTarget.current = {
-      x: THREE.MathUtils.clamp(((event.clientX - bounds.left) / bounds.width - 0.5) * 2, -1, 1),
-      y: THREE.MathUtils.clamp(((event.clientY - bounds.top) / bounds.height - 0.5) * 2, -1, 1),
-    };
-  };
-
-  const resetGaze = () => {
-    gazeTarget.current = RESTING_GAZE;
-  };
+  const modelTransform = `translate3d(${pose.translateX}px, ${pose.translateY}px, 0) rotateX(${pose.rotateX}deg) rotateY(${pose.rotateY}deg)`;
 
   return (
     <article
       ref={frameRef}
-      onPointerMove={updateGaze}
-      onPointerLeave={resetGaze}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={resetPose}
       className="surface-dark relative min-h-[340px] overflow-hidden p-7 sm:min-h-[370px] sm:p-9 xl:min-h-[390px]"
     >
       <h1 className="sr-only">NISHETA eSPORTS HUB</h1>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_84%_43%,rgba(229,180,109,0.18),transparent_25%),radial-gradient(circle_at_70%_60%,rgba(69,96,129,0.15),transparent_30%),linear-gradient(90deg,rgba(20,25,31,0.99)_0%,rgba(20,25,31,0.88)_44%,rgba(20,25,31,0.2)_73%,rgba(20,25,31,0.34)_100%)]" />
-      <div ref={canvasRef} className="pointer-events-none absolute -right-[6%] -top-[4%] h-[110%] w-[72%] min-w-[340px] sm:-right-[2%] sm:w-[67%] xl:right-0 xl:w-[60%]" aria-hidden="true" />
-      <img
-        src="/hero-nisheta-portrait.png"
-        alt=""
-        className={`pointer-events-none absolute -right-[14%] -top-[10%] h-[122%] w-[75%] min-w-[330px] object-cover object-[58%_30%] transition-opacity duration-500 sm:-right-[5%] sm:w-[66%] xl:right-0 xl:w-[59%] ${webglReady ? "opacity-0" : "opacity-85"}`}
-      />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#12171d] to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_84%_43%,rgba(229,180,109,0.16),transparent_23%),linear-gradient(90deg,rgba(20,25,31,0.98)_0%,rgba(20,25,31,0.86)_44%,rgba(20,25,31,0.08)_74%,rgba(20,25,31,0.20)_100%)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#12171d] to-transparent" />
+
+      <div className="pointer-events-none absolute -right-[26%] -top-[13%] h-[125%] w-[79%] min-w-[330px] [perspective:1000px] sm:-right-[15%] sm:w-[70%] xl:-right-[7%] xl:w-[62%]">
+        <div
+          className="h-full w-full [transform-style:preserve-3d]"
+          style={{
+            transform: modelTransform,
+            transition: `transform ${pose.active ? "120ms" : "750ms"} cubic-bezier(0.16, 1, 0.3, 1)`,
+          }}
+        >
+          <img
+            src="/hero-nisheta-portrait.png"
+            alt="Объёмный портрет игрока NISHETA"
+            className="h-full w-full select-none object-cover object-[58%_30%] opacity-95 [filter:drop-shadow(0_22px_28px_rgba(0,0,0,0.35))]"
+            draggable={false}
+          />
+        </div>
+      </div>
 
       <div className="relative z-10 flex h-full min-h-[284px] max-w-[20rem] flex-col justify-between sm:min-h-[298px]">
         <div>
@@ -255,7 +110,7 @@ export default function HeroPortrait() {
             Свой игровой хаб для быстрых сборов, живой команды и честной статистики.
           </p>
           <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#e5b46d]/90">
-            Голова и взгляд следят за курсором.
+            Следит за игрой. Следит за тобой.
           </p>
         </div>
 
