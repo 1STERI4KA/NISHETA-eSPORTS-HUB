@@ -10,14 +10,18 @@ interface Player {
   id: string;
   nickname: string;
 }
+interface GameCallPlayerRef {
+  id: string;
+  nickname: string;
+}
 interface Participant {
   id: string;
-  player: Player;
+  player: GameCallPlayerRef;
 }
 interface ActiveGameCall {
   id: string;
   game: string;
-  creator: Player;
+  creator: GameCallPlayerRef;
   playersNeeded: number;
   startTime: string;
   status: string;

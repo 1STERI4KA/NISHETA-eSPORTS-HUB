@@ -12,15 +12,19 @@ interface Player {
   nickname: string;
   telegramConnected: boolean;
 }
+interface GameCallPlayerRef {
+  id: string;
+  nickname: string;
+}
 interface Participant {
   id: string;
-  player: Player;
+  player: GameCallPlayerRef;
 }
 interface GameCall {
   id: string;
   game: string;
   creatorId: string;
-  creator: Player;
+  creator: GameCallPlayerRef;
   playersNeeded: number;
   startTime: string;
   note: string | null;
