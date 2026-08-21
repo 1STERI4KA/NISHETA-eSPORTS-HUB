@@ -13,33 +13,6 @@ type GazeTarget = {
 
 const RESTING_GAZE: GazeTarget = { x: 0, y: 0 };
 
-function makeIris() {
-  const iris = new THREE.Group();
-  const irisSurface = new THREE.Mesh(
-    new THREE.SphereGeometry(0.018, 18, 14),
-    new THREE.MeshPhysicalMaterial({ color: 0x726344, roughness: 0.36, metalness: 0.03, clearcoat: 0.36 })
-  );
-  irisSurface.scale.z = 0.3;
-  iris.add(irisSurface);
-
-  const pupil = new THREE.Mesh(
-    new THREE.SphereGeometry(0.008, 16, 12),
-    new THREE.MeshStandardMaterial({ color: 0x120f0c, roughness: 0.28 })
-  );
-  pupil.scale.z = 0.25;
-  pupil.position.z = 0.005;
-  iris.add(pupil);
-
-  const glint = new THREE.Mesh(
-    new THREE.SphereGeometry(0.003, 12, 10),
-    new THREE.MeshBasicMaterial({ color: 0xffffff })
-  );
-  glint.position.set(-0.004, 0.004, 0.008);
-  iris.add(glint);
-
-  return iris;
-}
-
 export default function HeroPortrait() {
   const frameRef = useRef<HTMLElement>(null);
   const canvasHostRef = useRef<HTMLDivElement>(null);
@@ -78,13 +51,11 @@ export default function HeroPortrait() {
     scene.add(fillLight);
 
     const avatarGroup = new THREE.Group();
-    avatarGroup.position.set(0.92, 0.05, 0);
+    avatarGroup.position.set(0.96, 0.08, 0);
     scene.add(avatarGroup);
 
     let headBone: THREE.Bone | null = null;
     let headRestQuaternion: THREE.Quaternion | null = null;
-    let leftIris: THREE.Group | null = null;
-    let rightIris: THREE.Group | null = null;
     let animationFrame = 0;
     let isDisposed = false;
 
@@ -95,7 +66,7 @@ export default function HeroPortrait() {
         if (isDisposed) return;
 
         const model = gltf.scene;
-        model.scale.setScalar(3.8);
+        model.scale.setScalar(5.15);
         model.updateMatrixWorld(true);
 
         model.traverse((node) => {
@@ -112,13 +83,6 @@ export default function HeroPortrait() {
           model.position.y -= 0.04;
           headRestQuaternion = headBone.quaternion.clone();
 
-          const gazeGroup = new THREE.Group();
-          headBone.add(gazeGroup);
-          leftIris = makeIris();
-          rightIris = makeIris();
-          leftIris.position.set(-0.043, 0.065, 0.096);
-          rightIris.position.set(0.043, 0.065, 0.096);
-          gazeGroup.add(leftIris, rightIris);
         }
 
         avatarGroup.add(model);
@@ -146,19 +110,10 @@ export default function HeroPortrait() {
       const target = reducedMotion ? RESTING_GAZE : gazeTarget.current;
       const headYaw = THREE.MathUtils.clamp(target.x * 0.48, -0.48, 0.48);
       const headPitch = THREE.MathUtils.clamp(target.y * -0.26, -0.26, 0.26);
-      const irisYaw = THREE.MathUtils.clamp(target.x * 0.22, -0.22, 0.22);
-      const irisPitch = THREE.MathUtils.clamp(target.y * -0.14, -0.14, 0.14);
-
       if (headBone && headRestQuaternion) {
         const offset = new THREE.Quaternion().setFromEuler(new THREE.Euler(headPitch, headYaw, 0, "YXZ"));
         const targetQuaternion = headRestQuaternion.clone().multiply(offset);
         headBone.quaternion.slerp(targetQuaternion, 0.1);
-      }
-
-      for (const iris of [leftIris, rightIris]) {
-        if (!iris) continue;
-        iris.rotation.y = THREE.MathUtils.damp(iris.rotation.y, irisYaw, 13, 1 / 60);
-        iris.rotation.x = THREE.MathUtils.damp(iris.rotation.x, irisPitch, 13, 1 / 60);
       }
 
       renderer.render(scene, camera);
@@ -221,7 +176,7 @@ export default function HeroPortrait() {
             Свой игровой хаб для быстрых сборов, живой команды и честной статистики.
           </p>
           <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#e5b46d]/90">
-            Голова и взгляд следят за курсором.
+            Голова разворачивается к курсору.
           </p>
         </div>
 
