@@ -44,26 +44,26 @@ export default function TelegramConnect({
   }
 
   if (initiallyConnected) {
-    return <p className="font-mono text-xs text-radiant">✓ Telegram подключён</p>;
+    return <p className="text-xs text-accent-success">✓ Telegram подключён</p>;
   }
 
   return (
-    <div className="panel space-y-2 p-4">
-      <p className="font-mono text-xs text-parchment">Telegram</p>
-      <p className="font-mono text-xs text-muted">
+    <div className="space-y-2 rounded-lg border border-hairline bg-paper p-4">
+      <p className="text-xs font-medium text-graphite">Telegram</p>
+      <p className="text-xs text-graphite-muted">
         Подключите Telegram, чтобы получать уведомления о сборах.
       </p>
 
       {code ? (
-        <div className="space-y-1 font-mono text-xs">
-          <p className="text-brass">
+        <div className="space-y-1 text-xs">
+          <p className="text-graphite-muted">
             Откройте {botUsername ? `@${botUsername}` : "NISHETA Bot"} в Telegram и отправьте:
           </p>
-          <p className="text-parchment">/start {code}</p>
-          <p className="text-muted">Код действует 15 минут.</p>
+          <p className="font-medium text-graphite">/start {code}</p>
+          <p className="text-graphite-muted">Код действует 15 минут.</p>
           <button
             onClick={() => router.refresh()}
-            className="mt-1 rounded-sm border border-ink-line px-2 py-1 text-muted transition-colors hover:text-parchment"
+            className="mt-1 rounded-md border border-hairline px-2 py-1 text-graphite-muted transition-colors hover:bg-paper-muted"
           >
             Я отправил(а) — проверить
           </button>
@@ -72,12 +72,12 @@ export default function TelegramConnect({
         <button
           onClick={connect}
           disabled={loading}
-          className="rounded-sm border border-brass/40 bg-brass/10 px-3 py-1.5 font-mono text-xs text-brass-bright transition-colors hover:bg-brass/20 disabled:opacity-50"
+          className="rounded-md bg-graphite px-3 py-1.5 text-xs font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {loading ? "..." : "Подключить Telegram"}
         </button>
       )}
-      {error && <p className="font-mono text-xs text-dire">{error}</p>}
+      {error && <p className="text-xs text-accent-danger">{error}</p>}
     </div>
   );
 }

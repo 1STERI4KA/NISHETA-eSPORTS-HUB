@@ -37,8 +37,10 @@ export default async function PlayPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="eyebrow">Кто в деле?</p>
-        <h1 className="font-display text-3xl text-parchment">Играть</h1>
+        <p className="text-xs font-medium uppercase tracking-wide text-graphite-muted">
+          Кто в деле?
+        </p>
+        <h1 className="text-3xl font-semibold tracking-tight text-graphite">Играть</h1>
       </div>
       <PlayClient players={players} gameCalls={serialized} />
     </div>

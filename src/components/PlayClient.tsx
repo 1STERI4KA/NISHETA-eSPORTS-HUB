@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import TelegramConnect from "@/components/TelegramConnect";
+import AvatarInitials from "@/components/AvatarInitials";
 
 const STORAGE_KEY = "nisheta_player_id";
 
@@ -11,22 +12,15 @@ interface Player {
   nickname: string;
   telegramConnected: boolean;
 }
-
-interface GameCallPlayer {
-  id: string;
-  nickname: string;
-}
-
 interface Participant {
   id: string;
-  player: GameCallPlayer;
+  player: Player;
 }
-
 interface GameCall {
   id: string;
   game: string;
   creatorId: string;
-  creator: GameCallPlayer;
+  creator: Player;
   playersNeeded: number;
   startTime: string;
   note: string | null;
@@ -34,11 +28,7 @@ interface GameCall {
   participants: Participant[];
 }
 
-const gameLabels: Record<string, string> = {
-  DOTA2: "Dota 2",
-  CS2: "CS2",
-};
-
+const gameLabels: Record<string, string> = { DOTA2: "Dota 2", CS2: "CS2" };
 const statusLabels: Record<string, string> = {
   waiting: "Ждём игроков",
   ready: "Все собрались",
@@ -92,16 +82,16 @@ function CreateForm({
   }
 
   return (
-    <div className="panel space-y-4 p-5">
+    <div className="space-y-4 rounded-lg border border-hairline bg-paper p-5">
       <div className="flex gap-2">
         {["DOTA2", "CS2"].map((g) => (
           <button
             key={g}
             onClick={() => setGame(g)}
-            className={`rounded-sm border px-3 py-1.5 font-mono text-xs ${
+            className={`rounded-md border px-3 py-1.5 text-xs ${
               game === g
-                ? "border-brass bg-brass/10 text-brass-bright"
-                : "border-ink-line text-muted"
+                ? "border-graphite bg-graphite text-paper"
+                : "border-hairline text-graphite-muted"
             }`}
           >
             {gameLabels[g]}
@@ -110,16 +100,16 @@ function CreateForm({
       </div>
 
       <div>
-        <p className="mb-1 font-mono text-xs text-muted">Нужно ещё игроков</p>
+        <p className="mb-1 text-xs text-graphite-muted">Нужно ещё игроков</p>
         <div className="flex gap-2">
           {[1, 2, 3, 4, 5].map((n) => (
             <button
               key={n}
               onClick={() => setPlayersNeeded(n)}
-              className={`h-8 w-8 rounded-sm border font-mono text-xs ${
+              className={`h-8 w-8 rounded-md border text-xs ${
                 playersNeeded === n
-                  ? "border-brass bg-brass/10 text-brass-bright"
-                  : "border-ink-line text-muted"
+                  ? "border-graphite bg-graphite text-paper"
+                  : "border-hairline text-graphite-muted"
               }`}
             >
               {n}
@@ -129,7 +119,7 @@ function CreateForm({
       </div>
 
       <div>
-        <p className="mb-1 font-mono text-xs text-muted">Начало</p>
+        <p className="mb-1 text-xs text-graphite-muted">Начало</p>
         <div className="flex gap-2">
           {[
             { key: "now", label: "Сейчас" },
@@ -139,10 +129,10 @@ function CreateForm({
             <button
               key={opt.key}
               onClick={() => setStartOption(opt.key as "now" | "30" | "60")}
-              className={`rounded-sm border px-3 py-1.5 font-mono text-xs ${
+              className={`rounded-md border px-3 py-1.5 text-xs ${
                 startOption === opt.key
-                  ? "border-brass bg-brass/10 text-brass-bright"
-                  : "border-ink-line text-muted"
+                  ? "border-graphite bg-graphite text-paper"
+                  : "border-hairline text-graphite-muted"
               }`}
             >
               {opt.label}
@@ -155,24 +145,21 @@ function CreateForm({
         value={note}
         onChange={(e) => setNote(e.target.value)}
         placeholder="Заметка (необязательно)"
-        className="w-full rounded-sm border border-ink-line bg-ink px-3 py-2 font-mono text-xs text-parchment placeholder:text-muted"
+        className="w-full rounded-md border border-hairline bg-paper px-3 py-2 text-sm text-graphite placeholder:text-graphite-muted focus:outline-none"
       />
 
       <div className="flex flex-wrap items-center gap-3">
         <button
           onClick={submit}
           disabled={loading}
-          className="rounded-sm border border-brass/40 bg-brass/10 px-4 py-2 font-mono text-xs text-brass-bright transition-colors hover:bg-brass/20 disabled:opacity-50"
+          className="rounded-md bg-graphite px-4 py-2 text-xs font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {loading ? "..." : "СОЗДАТЬ СБОР"}
         </button>
-        <button
-          onClick={onCancel}
-          className="font-mono text-xs text-muted underline underline-offset-2"
-        >
+        <button onClick={onCancel} className="text-xs text-graphite-muted underline underline-offset-2">
           Отмена
         </button>
-        {error && <p className="font-mono text-xs text-dire">{error}</p>}
+        {error && <p className="text-xs text-accent-danger">{error}</p>}
       </div>
     </div>
   );
@@ -223,8 +210,8 @@ export default function PlayClient({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {me ? (
-          <p className="font-mono text-xs text-muted">
-            Ты: <span className="text-brass">{me.nickname}</span>{" "}
+          <p className="text-xs text-graphite-muted">
+            Ты: <span className="font-medium text-graphite">{me.nickname}</span>{" "}
             <button
               onClick={() => setPlayerId("")}
               className="underline underline-offset-2"
@@ -236,7 +223,7 @@ export default function PlayClient({
           <select
             onChange={(e) => setPlayerId(e.target.value)}
             defaultValue=""
-            className="rounded-sm border border-ink-line bg-ink px-2 py-1.5 font-mono text-xs text-parchment"
+            className="rounded-md border border-hairline bg-paper px-2 py-1.5 text-xs text-graphite focus:outline-none"
           >
             <option value="" disabled>
               Кто ты?
@@ -253,7 +240,7 @@ export default function PlayClient({
           <button
             onClick={() => setShowForm(true)}
             disabled={!me}
-            className="rounded-sm border border-brass/40 bg-brass/10 px-4 py-2 font-mono text-xs text-brass-bright transition-colors hover:bg-brass/20 disabled:opacity-40"
+            className="rounded-md bg-graphite px-4 py-2 text-xs font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-40"
             title={!me ? "Сначала выбери, кто ты" : undefined}
           >
             + СОБРАТЬ КАТКУ
@@ -261,9 +248,7 @@ export default function PlayClient({
         )}
       </div>
 
-      {me && (
-        <TelegramConnect playerId={me.id} initiallyConnected={me.telegramConnected} />
-      )}
+      {me && <TelegramConnect playerId={me.id} initiallyConnected={me.telegramConnected} />}
 
       {showForm && me && (
         <CreateForm
@@ -277,8 +262,8 @@ export default function PlayClient({
       )}
 
       {activeCalls.length === 0 ? (
-        <div className="panel p-8 text-center">
-          <p className="font-mono text-sm text-muted">Сейчас никто не собирает катку.</p>
+        <div className="rounded-lg border border-hairline bg-paper p-8 text-center">
+          <p className="text-sm text-graphite-muted">Сейчас никто не собирает катку.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -286,24 +271,24 @@ export default function PlayClient({
             const joined = g.participants.some((p) => p.player.id === playerId);
             const isFull = g.participants.length >= g.playersNeeded;
             return (
-              <div key={g.id} className="panel space-y-3 p-5">
+              <div key={g.id} className="space-y-3 rounded-lg border border-hairline bg-paper p-5">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs text-brass">
+                  <span className="text-xs font-medium text-accent-dota">
                     🎮 {gameLabels[g.game] ?? g.game}
                   </span>
                   <span
-                    className={`font-mono text-xs ${
-                      g.status === "ready" ? "text-radiant" : "text-muted"
+                    className={`text-xs ${
+                      g.status === "ready" ? "text-accent-success" : "text-graphite-muted"
                     }`}
                   >
                     {g.status === "ready" ? "🔥 GAME READY" : statusLabels[g.status]}
                   </span>
                 </div>
-                <p className="font-display text-lg text-parchment">
+                <p className="text-lg font-medium text-graphite">
                   {g.creator.nickname} собирает катку
                 </p>
-                {g.note && <p className="font-mono text-xs text-muted">«{g.note}»</p>}
-                <div className="flex flex-wrap items-center gap-4 font-mono text-xs text-muted">
+                {g.note && <p className="text-xs text-graphite-muted">«{g.note}»</p>}
+                <div className="flex flex-wrap items-center gap-4 text-xs text-graphite-muted">
                   <span>
                     👥 {g.participants.length} / {g.playersNeeded}
                   </span>
@@ -311,9 +296,10 @@ export default function PlayClient({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {g.participants.map((p) => (
-                    <span key={p.id} className="ribbon">
-                      {p.player.nickname}
-                    </span>
+                    <div key={p.id} className="flex items-center gap-1.5">
+                      <AvatarInitials name={p.player.nickname} size="sm" />
+                      <span className="text-xs text-graphite">{p.player.nickname}</span>
+                    </div>
                   ))}
                 </div>
                 <div className="flex flex-wrap gap-2 pt-1">
@@ -324,7 +310,7 @@ export default function PlayClient({
                           act(`/api/gamecalls/${g.id}/leave`, { playerId: me.id })
                         }
                         disabled={loading}
-                        className="rounded-sm border border-dire/40 px-3 py-1.5 font-mono text-xs text-dire transition-colors hover:bg-dire/10 disabled:opacity-50"
+                        className="rounded-md border border-hairline px-3 py-1.5 text-xs text-graphite-muted transition-colors hover:bg-paper-muted disabled:opacity-50"
                       >
                         НЕ ИДУ
                       </button>
@@ -334,7 +320,7 @@ export default function PlayClient({
                           act(`/api/gamecalls/${g.id}/join`, { playerId: me.id })
                         }
                         disabled={loading || isFull}
-                        className="rounded-sm border border-radiant/40 bg-radiant/10 px-3 py-1.5 font-mono text-xs text-radiant transition-colors hover:bg-radiant/20 disabled:opacity-40"
+                        className="rounded-md bg-graphite px-3 py-1.5 text-xs font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-40"
                       >
                         Я ИДУ
                       </button>
@@ -343,7 +329,7 @@ export default function PlayClient({
                     <button
                       onClick={() => act(`/api/gamecalls/${g.id}/cancel`, {})}
                       disabled={loading}
-                      className="rounded-sm border border-ink-line px-3 py-1.5 font-mono text-xs text-muted transition-colors hover:text-parchment disabled:opacity-50"
+                      className="rounded-md border border-hairline px-3 py-1.5 text-xs text-graphite-muted transition-colors hover:bg-paper-muted disabled:opacity-50"
                     >
                       ОТМЕНИТЬ СБОР
                     </button>
@@ -355,9 +341,9 @@ export default function PlayClient({
         </div>
       )}
 
-      <p className="font-mono text-xs text-muted">
+      <p className="text-xs text-graphite-muted">
         Нужны команды/позиции/ready на весь состав?{" "}
-        <a href="/lobby" className="text-brass underline underline-offset-2">
+        <a href="/lobby" className="text-graphite underline underline-offset-2">
           Открыть старое лобби →
         </a>
       </p>
