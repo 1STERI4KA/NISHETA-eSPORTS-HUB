@@ -12,9 +12,7 @@ export default function RandomizeTeamsButton({ lobbyId }: { lobbyId: string }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/lobby/${lobbyId}/randomize-teams`, {
-        method: "POST",
-      });
+      const res = await fetch(`/api/lobby/${lobbyId}/randomize-teams`, { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "Ошибка рандомайзера");
@@ -33,11 +31,11 @@ export default function RandomizeTeamsButton({ lobbyId }: { lobbyId: string }) {
       <button
         onClick={handleClick}
         disabled={loading}
-        className="rounded-sm border border-brass/40 bg-brass/10 px-3 py-1.5 font-mono text-xs text-brass-bright transition-colors hover:bg-brass/20 disabled:opacity-50"
+        className="rounded-md border border-hairline px-3 py-1.5 text-xs text-graphite transition-colors hover:bg-paper-muted disabled:opacity-50"
       >
         {loading ? "..." : "Рандомайзер команд"}
       </button>
-      {error && <p className="font-mono text-xs text-dire">{error}</p>}
+      {error && <p className="text-xs text-accent-danger">{error}</p>}
     </div>
   );
 }

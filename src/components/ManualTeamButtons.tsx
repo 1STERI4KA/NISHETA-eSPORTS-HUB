@@ -32,7 +32,7 @@ export default function ManualTeamButtons({
       <button
         onClick={() => setTeam("radiant")}
         disabled={loading || currentTeam === "radiant"}
-        className="rounded-sm border border-radiant/40 px-2 py-1 font-mono text-[10px] text-radiant transition-colors hover:bg-radiant/10 disabled:opacity-30"
+        className="rounded-md border border-accent-success/30 px-2 py-1 text-[10px] text-accent-success transition-colors hover:bg-accent-success/5 disabled:opacity-30"
         title="Переместить в Radiant"
       >
         → Radiant
@@ -40,7 +40,7 @@ export default function ManualTeamButtons({
       <button
         onClick={() => setTeam("dire")}
         disabled={loading || currentTeam === "dire"}
-        className="rounded-sm border border-dire/40 px-2 py-1 font-mono text-[10px] text-dire transition-colors hover:bg-dire/10 disabled:opacity-30"
+        className="rounded-md border border-accent-danger/30 px-2 py-1 text-[10px] text-accent-danger transition-colors hover:bg-accent-danger/5 disabled:opacity-30"
         title="Переместить в Dire"
       >
         → Dire

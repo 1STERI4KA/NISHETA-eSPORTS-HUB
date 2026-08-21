@@ -13,8 +13,10 @@ export default async function CreateGamePage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="eyebrow">NISHETA GAME</p>
-        <h1 className="font-display text-3xl text-parchment">Кто играет?</h1>
+        <p className="text-xs font-medium uppercase tracking-wide text-graphite-muted">
+          NISHETA GAME
+        </p>
+        <h1 className="text-3xl font-semibold tracking-tight text-graphite">Кто играет?</h1>
       </div>
       <LobbyPicker players={players} />
     </div>

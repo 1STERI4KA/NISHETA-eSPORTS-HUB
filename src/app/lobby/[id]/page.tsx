@@ -38,15 +38,13 @@ function PlayerRow({
     <div className="flex flex-col gap-2 p-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <span className="w-24 font-mono text-xs text-brass">
+          <span className="w-24 text-xs text-graphite-muted">
             {lp.position ? positionLabels[lp.position] : "—"}
           </span>
-          <span className="font-display text-base text-parchment">
-            {lp.player.nickname}
-          </span>
+          <span className="text-sm font-medium text-graphite">{lp.player.nickname}</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-xs text-muted">
+          <span className="text-xs text-graphite-muted">
             {lp.heroName ?? "герой не выбран"}
           </span>
           {!isArchived && (
@@ -60,7 +58,7 @@ function PlayerRow({
         </div>
       </div>
       {lp.buildItems && (
-        <p className="pl-24 font-mono text-xs text-muted">Билд: {lp.buildItems}</p>
+        <p className="pl-24 text-xs text-graphite-muted">Билд: {lp.buildItems}</p>
       )}
     </div>
   );
@@ -89,10 +87,10 @@ export default async function GameSessionPage({ params }: { params: { id: string
 
   const status = isArchived ? "РАСПУЩЕНО" : allReady ? "READY" : "WAITING";
   const statusColor = isArchived
-    ? "text-muted border-ink-line"
+    ? "border-hairline text-graphite-muted"
     : allReady
-    ? "text-radiant border-radiant/50 bg-radiant/10"
-    : "text-brass border-brass/40 bg-brass/10";
+    ? "border-accent-success/30 bg-accent-success/5 text-accent-success"
+    : "border-hairline bg-paper-muted text-graphite";
 
   const radiant = lobby.players.filter((lp) => lp.team === "radiant");
   const dire = lobby.players.filter((lp) => lp.team === "dire");
@@ -102,19 +100,15 @@ export default async function GameSessionPage({ params }: { params: { id: string
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="eyebrow">
+          <p className="text-xs font-medium uppercase tracking-wide text-graphite-muted">
             NISHETA GAME · создано {new Date(lobby.createdAt).toLocaleString("ru-RU")}
           </p>
-          <h1 className="font-display text-3xl text-parchment">
+          <h1 className="text-3xl font-semibold tracking-tight text-graphite">
             {totalCount} игроков · READY {readyCount}/{totalCount}
           </h1>
         </div>
         <div className="flex items-center gap-3">
-          <span
-            className={`rounded-sm border px-3 py-1.5 font-mono text-xs ${statusColor}`}
-          >
-            {status}
-          </span>
+          <span className={`rounded-md border px-3 py-1.5 text-xs ${statusColor}`}>{status}</span>
           {!isArchived && <DisbandLobbyButton lobbyId={lobby.id} />}
         </div>
       </div>
@@ -127,13 +121,13 @@ export default async function GameSessionPage({ params }: { params: { id: string
           <AddPlayerSelect lobbyId={lobby.id} availablePlayers={availablePlayers} />
         </div>
       )}
-      <p className="font-mono text-xs text-muted">
+      <p className="text-xs text-graphite-muted">
         Команды: "Рандомайзер команд" — случайно, "Сбалансировать" — по общему винрейту,
         либо стрелки у каждого игрока — вручную.
       </p>
 
       {noTeam.length === lobby.players.length ? (
-        <div className="panel divide-y divide-ink-line/60">
+        <div className="divide-y divide-hairline rounded-lg border border-hairline bg-paper">
           {lobby.players.map((lp) => (
             <PlayerRow key={lp.id} lp={lp} lobbyId={lobby.id} isArchived={isArchived} />
           ))}
@@ -141,31 +135,37 @@ export default async function GameSessionPage({ params }: { params: { id: string
       ) : (
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
-            <h2 className="eyebrow mb-2 text-radiant">{teamLabels.radiant}</h2>
-            <div className="panel divide-y divide-ink-line/60">
+            <h2 className="mb-2 text-xs font-medium uppercase tracking-wide text-accent-success">
+              {teamLabels.radiant}
+            </h2>
+            <div className="divide-y divide-hairline rounded-lg border border-hairline bg-paper">
               {radiant.map((lp) => (
                 <PlayerRow key={lp.id} lp={lp} lobbyId={lobby.id} isArchived={isArchived} />
               ))}
               {radiant.length === 0 && (
-                <p className="p-4 font-mono text-xs text-muted">Пусто</p>
+                <p className="p-4 text-xs text-graphite-muted">Пусто</p>
               )}
             </div>
           </div>
           <div>
-            <h2 className="eyebrow mb-2 text-dire">{teamLabels.dire}</h2>
-            <div className="panel divide-y divide-ink-line/60">
+            <h2 className="mb-2 text-xs font-medium uppercase tracking-wide text-accent-danger">
+              {teamLabels.dire}
+            </h2>
+            <div className="divide-y divide-hairline rounded-lg border border-hairline bg-paper">
               {dire.map((lp) => (
                 <PlayerRow key={lp.id} lp={lp} lobbyId={lobby.id} isArchived={isArchived} />
               ))}
               {dire.length === 0 && (
-                <p className="p-4 font-mono text-xs text-muted">Пусто</p>
+                <p className="p-4 text-xs text-graphite-muted">Пусто</p>
               )}
             </div>
           </div>
           {noTeam.length > 0 && (
             <div className="sm:col-span-2">
-              <h2 className="eyebrow mb-2">Без команды</h2>
-              <div className="panel divide-y divide-ink-line/60">
+              <h2 className="mb-2 text-xs font-medium uppercase tracking-wide text-graphite-muted">
+                Без команды
+              </h2>
+              <div className="divide-y divide-hairline rounded-lg border border-hairline bg-paper">
                 {noTeam.map((lp) => (
                   <PlayerRow key={lp.id} lp={lp} lobbyId={lobby.id} isArchived={isArchived} />
                 ))}

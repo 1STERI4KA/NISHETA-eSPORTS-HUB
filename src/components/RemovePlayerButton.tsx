@@ -16,9 +16,7 @@ export default function RemovePlayerButton({
   async function handleClick() {
     setLoading(true);
     try {
-      await fetch(`/api/lobby/${lobbyId}/players/${lobbyPlayerId}`, {
-        method: "DELETE",
-      });
+      await fetch(`/api/lobby/${lobbyId}/players/${lobbyPlayerId}`, { method: "DELETE" });
       router.refresh();
     } finally {
       setLoading(false);
@@ -29,7 +27,7 @@ export default function RemovePlayerButton({
     <button
       onClick={handleClick}
       disabled={loading}
-      className="rounded-sm border border-dire/40 px-2 py-1 font-mono text-xs text-dire transition-colors hover:bg-dire/10 disabled:opacity-50"
+      className="rounded-md border border-accent-danger/30 px-2 py-1 text-xs text-accent-danger transition-colors hover:bg-accent-danger/5 disabled:opacity-50"
     >
       {loading ? "..." : "Убрать"}
     </button>

@@ -31,11 +31,11 @@ export default function BalanceTeamsButton({ lobbyId }: { lobbyId: string }) {
       <button
         onClick={handleClick}
         disabled={loading}
-        className="rounded-sm border border-brass/40 bg-brass/10 px-3 py-1.5 font-mono text-xs text-brass-bright transition-colors hover:bg-brass/20 disabled:opacity-50"
+        className="rounded-md border border-hairline px-3 py-1.5 text-xs text-graphite transition-colors hover:bg-paper-muted disabled:opacity-50"
       >
         {loading ? "..." : "Сбалансировать"}
       </button>
-      {error && <p className="font-mono text-xs text-dire">{error}</p>}
+      {error && <p className="text-xs text-accent-danger">{error}</p>}
     </div>
   );
 }

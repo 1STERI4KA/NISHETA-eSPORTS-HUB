@@ -22,7 +22,7 @@ export default function DisbandLobbyButton({ lobbyId }: { lobbyId: string }) {
     <button
       onClick={handleClick}
       disabled={loading}
-      className="rounded-sm border border-dire/40 px-3 py-1.5 font-mono text-xs text-dire transition-colors hover:bg-dire/10 disabled:opacity-50"
+      className="rounded-md border border-accent-danger/30 px-3 py-1.5 text-xs text-accent-danger transition-colors hover:bg-accent-danger/5 disabled:opacity-50"
     >
       {loading ? "..." : "РАСПУСТИТЬ КАТКУ"}
     </button>

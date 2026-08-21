@@ -25,7 +25,7 @@ export default function RandomizeHeroButton({ lobbyPlayerId }: { lobbyPlayerId: 
     <button
       onClick={handleClick}
       disabled={loading}
-      className="rounded-sm border border-ink-line px-2 py-1 font-mono text-xs text-muted transition-colors hover:border-brass/40 hover:text-brass-bright disabled:opacity-50"
+      className="rounded-md border border-hairline px-2 py-1 text-xs text-graphite-muted transition-colors hover:bg-paper-muted disabled:opacity-50"
     >
       {loading ? "..." : "Рандом герой"}
     </button>

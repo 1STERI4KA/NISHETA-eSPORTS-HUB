@@ -50,10 +50,10 @@ export default function LobbyPicker({ players }: Props) {
             <button
               key={p.id}
               onClick={() => toggle(p.id)}
-              className={`rounded-sm border px-3 py-2 text-left font-mono text-sm transition-colors ${
+              className={`rounded-md border px-3 py-2 text-left text-sm transition-colors ${
                 active
-                  ? "border-brass bg-brass/10 text-brass-bright"
-                  : "border-ink-line text-muted hover:text-parchment"
+                  ? "border-graphite bg-paper-muted text-graphite"
+                  : "border-hairline text-graphite-muted hover:text-graphite"
               }`}
             >
               {p.nickname}
@@ -62,7 +62,7 @@ export default function LobbyPicker({ players }: Props) {
         })}
       </div>
 
-      <p className="font-mono text-xs text-brass">
+      <p className="text-xs font-medium text-graphite-muted">
         {selected.length} / {players.length} ИГРОКОВ
       </p>
 
@@ -70,13 +70,13 @@ export default function LobbyPicker({ players }: Props) {
         <button
           onClick={createLobby}
           disabled={selected.length < 2 || loading}
-          className="rounded-sm border border-brass/40 bg-brass/10 px-4 py-2 font-mono text-xs text-brass-bright transition-colors hover:bg-brass/20 disabled:opacity-40"
+          className="rounded-md bg-graphite px-4 py-2 text-xs font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-40"
         >
           {loading ? "Создание..." : "СОБРАТЬ КАТКУ"}
         </button>
-        {error && <p className="font-mono text-xs text-dire">{error}</p>}
+        {error && <p className="text-xs text-accent-danger">{error}</p>}
       </div>
-      <p className="font-mono text-xs text-muted">
+      <p className="text-xs text-graphite-muted">
         Для рандомайзера позиций нужно выбрать ровно 5 игроков — но игру можно собрать с любым количеством.
       </p>
     </div>

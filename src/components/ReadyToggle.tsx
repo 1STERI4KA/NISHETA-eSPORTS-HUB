@@ -31,10 +31,10 @@ export default function ReadyToggle({
     <button
       onClick={handleClick}
       disabled={loading}
-      className={`rounded-sm border px-2 py-1 font-mono text-xs transition-colors disabled:opacity-50 ${
+      className={`rounded-md border px-2 py-1 text-xs transition-colors disabled:opacity-50 ${
         ready
-          ? "border-radiant/50 bg-radiant/10 text-radiant"
-          : "border-ink-line text-muted hover:text-parchment"
+          ? "border-accent-success/40 bg-accent-success/5 text-accent-success"
+          : "border-hairline text-graphite-muted hover:text-graphite"
       }`}
     >
       {loading ? "..." : ready ? "Готов ✓" : "Не готов"}

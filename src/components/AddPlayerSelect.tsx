@@ -37,7 +37,7 @@ export default function AddPlayerSelect({
       <select
         value={selected}
         onChange={(e) => setSelected(e.target.value)}
-        className="rounded-sm border border-ink-line bg-ink px-2 py-1.5 font-mono text-xs text-parchment"
+        className="rounded-md border border-hairline bg-paper px-2 py-1.5 text-xs text-graphite focus:outline-none"
       >
         <option value="">Добавить игрока...</option>
         {availablePlayers.map((p) => (
@@ -49,7 +49,7 @@ export default function AddPlayerSelect({
       <button
         onClick={handleAdd}
         disabled={!selected || loading}
-        className="rounded-sm border border-brass/40 bg-brass/10 px-3 py-1.5 font-mono text-xs text-brass-bright transition-colors hover:bg-brass/20 disabled:opacity-40"
+        className="rounded-md border border-hairline px-3 py-1.5 text-xs text-graphite transition-colors hover:bg-paper-muted disabled:opacity-40"
       >
         {loading ? "..." : "Добавить"}
       </button>
