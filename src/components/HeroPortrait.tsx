@@ -83,7 +83,7 @@ export default function HeroPortrait() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_84%_43%,rgba(229,180,109,0.16),transparent_23%),linear-gradient(90deg,rgba(20,25,31,0.98)_0%,rgba(20,25,31,0.86)_44%,rgba(20,25,31,0.08)_74%,rgba(20,25,31,0.20)_100%)]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#12171d] to-transparent" />
 
-      <div className="pointer-events-none absolute -right-[26%] -top-[13%] h-[125%] w-[79%] min-w-[330px] [perspective:1000px] sm:-right-[15%] sm:w-[70%] xl:-right-[7%] xl:w-[62%]">
+      <div className="pointer-events-none absolute right-0 top-0 h-full w-[56%] [perspective:1000px] sm:w-[51%] xl:w-[49%]">
         <div
           className="h-full w-full [transform-style:preserve-3d]"
           style={{
@@ -92,9 +92,9 @@ export default function HeroPortrait() {
           }}
         >
           <img
-            src="/hero-nisheta-portrait.png"
-            alt="Объёмный портрет игрока NISHETA"
-            className="h-full w-full select-none object-cover object-[58%_30%] opacity-95 [filter:drop-shadow(0_22px_28px_rgba(0,0,0,0.35))]"
+            src="/hero-friend-source.jpg"
+            alt="Портрет игрока NISHETA"
+            className="h-full w-full select-none object-cover object-[50%_34%] opacity-95 [filter:drop-shadow(0_22px_28px_rgba(0,0,0,0.35))]"
             draggable={false}
           />
         </div>
@@ -110,7 +110,7 @@ export default function HeroPortrait() {
             Свой игровой хаб для быстрых сборов, живой команды и честной статистики.
           </p>
           <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#e5b46d]/90">
-            Следит за игрой. Следит за тобой.
+Только его лицо. Без чужого аватара.
           </p>
         </div>
 
