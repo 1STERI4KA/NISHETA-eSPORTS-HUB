@@ -70,6 +70,7 @@ export default async function PlayerProfilePage({
               {player.steamId ? " · Steam привязан" : " · Steam не привязан"}
             </p>
           </div>
+          {player.bio && <p className="mt-3 max-w-xl text-xs leading-5 text-graphite-muted">{player.bio}</p>}
         </div>
         <div className="rounded-2xl bg-paper-muted/70 px-4 py-3 text-left sm:text-right">
           <p className="data-label">Всего матчей</p>

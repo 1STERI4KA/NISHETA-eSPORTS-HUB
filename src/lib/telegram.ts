@@ -1,8 +1,5 @@
-// Вся Telegram-логика выключена, пока нет TELEGRAM_BOT_TOKEN — сайт продолжает
-// работать нормально без бота. Реальную регистрацию webhook и запуск бота
-// делаем отдельным шагом, когда токен появится.
-
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://nisheta-e-sports-hub.vercel.app").replace(/\/$/, "");
 
 export function isTelegramEnabled(): boolean {
   return Boolean(TOKEN);
@@ -13,28 +10,24 @@ async function callTelegramApi(method: string, payload: Record<string, unknown>)
     console.warn(`[telegram] Пропущен вызов ${method} — TELEGRAM_BOT_TOKEN не задан`);
     return null;
   }
-  const res = await fetch(`https://api.telegram.org/bot${TOKEN}/${method}`, {
+
+  const response = await fetch(`https://api.telegram.org/bot${TOKEN}/${method}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) {
-    console.error(`[telegram] Ошибка ${method}:`, await res.text());
+
+  if (!response.ok) {
+    console.error(`[telegram] Ошибка ${method}:`, await response.text());
     return null;
   }
-  return res.json();
+
+  return response.json();
 }
 
-interface InlineButton {
-  text: string;
-  callback_data: string;
-}
+type InlineButton = { text: string; callback_data?: string; url?: string };
 
-export async function sendMessage(
-  chatId: string,
-  text: string,
-  buttons?: InlineButton[][]
-) {
+export async function sendMessage(chatId: string, text: string, buttons?: InlineButton[][]) {
   return callTelegramApi("sendMessage", {
     chat_id: chatId,
     text,
@@ -43,18 +36,10 @@ export async function sendMessage(
 }
 
 export async function answerCallbackQuery(callbackQueryId: string, text?: string) {
-  return callTelegramApi("answerCallbackQuery", {
-    callback_query_id: callbackQueryId,
-    text,
-  });
+  return callTelegramApi("answerCallbackQuery", { callback_query_id: callbackQueryId, text });
 }
 
-export async function editMessageText(
-  chatId: string,
-  messageId: number,
-  text: string,
-  buttons?: InlineButton[][]
-) {
+export async function editMessageText(chatId: string, messageId: number, text: string, buttons?: InlineButton[][]) {
   return callTelegramApi("editMessageText", {
     chat_id: chatId,
     message_id: messageId,
@@ -65,28 +50,89 @@ export async function editMessageText(
 
 const gameLabels: Record<string, string> = { DOTA2: "Dota 2", CS2: "CS2" };
 
-// Отправляет уведомление о сборе конкретному игроку (по его telegramChatId).
+function timeLine(startTime: Date) {
+  const minutes = Math.round((startTime.getTime() - Date.now()) / 60_000);
+  if (minutes <= 0) return "уже начинается";
+  if (minutes < 60) return `через ${minutes} мин`;
+  return `через ${Math.round(minutes / 60)} ч`;
+}
+
+function gameCallButtons(gameCallId: string): InlineButton[][] {
+  return [
+    [
+      { text: "Я иду", callback_data: `join_game:${gameCallId}` },
+      { text: "Не иду", callback_data: `leave_game:${gameCallId}` },
+    ],
+    [{ text: "Открыть Game Call", url: `${APP_URL}/play` }],
+  ];
+}
+
 export async function sendGameCallNotification(
+  chatId: string,
+  gameCall: { id: string; game: string; creatorNickname: string; playersNeeded: number; participantCount: number; startTime: Date; note?: string | null }
+) {
+  const text = [
+    "NISHETA GAME CALL",
+    "",
+    `${gameLabels[gameCall.game] ?? gameCall.game} · ${gameCall.creatorNickname} собирает катку`,
+    `Старт: ${timeLine(gameCall.startTime)}`,
+    `Состав: ${gameCall.participantCount}/${gameCall.playersNeeded}`,
+    gameCall.note ? `Заметка: ${gameCall.note}` : null,
+  ].filter(Boolean).join("\n");
+
+  return sendMessage(chatId, text, gameCallButtons(gameCall.id));
+}
+
+export async function sendGameCallReadyNotification(
   chatId: string,
   gameCall: { id: string; game: string; creatorNickname: string; playersNeeded: number; startTime: Date }
 ) {
-  const minutes = Math.round((gameCall.startTime.getTime() - Date.now()) / 60000);
-  const timeLine = minutes <= 0 ? "уже начинается" : `через ${minutes} мин`;
-
   const text = [
-    "🎮 NISHETA GAME",
+    "СОСТАВ ГОТОВ",
     "",
-    gameLabels[gameCall.game] ?? gameCall.game,
-    `${gameCall.creatorNickname} собирает катку.`,
-    "",
-    `⏰ ${timeLine}`,
-    `👥 Нужно ещё игроков: ${gameCall.playersNeeded}`,
+    `${gameLabels[gameCall.game] ?? gameCall.game} · сбор ${gameCall.creatorNickname}`,
+    `${gameCall.playersNeeded}/${gameCall.playersNeeded} игроков подтвердили участие.`,
+    `Старт: ${timeLine(gameCall.startTime)}`,
+    "Открой Game Call, чтобы свериться с составом.",
   ].join("\n");
 
-  return sendMessage(chatId, text, [
+  return sendMessage(chatId, text, [[{ text: "Открыть Game Call", url: `${APP_URL}/play` }]]);
+}
+
+export async function sendGameCallCancelledNotification(
+  chatId: string,
+  gameCall: { game: string; creatorNickname: string }
+) {
+  return sendMessage(
+    chatId,
+    `Сбор отменён\n\n${gameLabels[gameCall.game] ?? gameCall.game} · ${gameCall.creatorNickname} отменил(а) Game Call. Следующий сбор появится в этом же боте.`
+  );
+}
+
+export async function sendGameCallCompletedNotification(
+  chatId: string,
+  gameCall: { id: string; game: string; creatorNickname: string; participantCount: number }
+) {
+  return sendMessage(
+    chatId,
     [
-      { text: "🟢 Я ИДУ", callback_data: `join_game:${gameCall.id}` },
-      { text: "🔴 НЕ ИДУ", callback_data: `leave_game:${gameCall.id}` },
-    ],
-  ]);
+      "ИГРА СОСТОЯЛАСЬ",
+      "",
+      `${gameLabels[gameCall.game] ?? gameCall.game} · сбор ${gameCall.creatorNickname}`,
+      `В сборе отметились: ${gameCall.participantCount}.`,
+      "Спасибо за игру. История сборов уже появилась в NISHETA.",
+    ].join("\n"),
+    [[{ text: "Открыть историю", url: `${APP_URL}/play` }]]
+  );
+}
+
+export async function sendOrganizerRsvpNotification(
+  chatId: string,
+  payload: { game: string; participantNickname: string; participantCount: number; playersNeeded: number; joined: boolean }
+) {
+  const action = payload.joined ? "подтвердил(а) участие" : "вышел(ла) из состава";
+  return sendMessage(
+    chatId,
+    `${payload.participantNickname} ${action}.\n${gameLabels[payload.game] ?? payload.game}: ${payload.participantCount}/${payload.playersNeeded}.`
+  );
 }

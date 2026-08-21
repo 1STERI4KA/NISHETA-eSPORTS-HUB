@@ -10,12 +10,15 @@ export default async function PlayPage() {
   const playersRaw = await prisma.player.findMany({
     where: { isActive: true },
     orderBy: { nickname: "asc" },
-    select: { id: true, nickname: true, telegramChatId: true },
+    select: { id: true, nickname: true, telegramChatId: true, realName: true, bio: true, mainRole: true },
   });
-  const players = playersRaw.map((p) => ({
-    id: p.id,
-    nickname: p.nickname,
-    telegramConnected: Boolean(p.telegramChatId),
+  const players = playersRaw.map((player) => ({
+    id: player.id,
+    nickname: player.nickname,
+    realName: player.realName,
+    bio: player.bio,
+    mainRole: player.mainRole,
+    telegramConnected: Boolean(player.telegramChatId),
   }));
 
   const gameCalls = await prisma.gameCall.findMany({
@@ -23,26 +26,34 @@ export default async function PlayPage() {
     orderBy: { createdAt: "desc" },
     include: {
       creator: { select: { id: true, nickname: true } },
-      participants: {
-        include: { player: { select: { id: true, nickname: true } } },
-      },
+      participants: { include: { player: { select: { id: true, nickname: true } } }, orderBy: { joinedAt: "asc" } },
     },
   });
 
-  const serialized = gameCalls.map((g) => ({
-    ...g,
-    startTime: g.startTime.toISOString(),
-  }));
+  const recentGameCalls = await prisma.gameCall.findMany({
+    where: { status: { in: ["cancelled", "expired", "completed"] } },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+    include: {
+      creator: { select: { id: true, nickname: true } },
+      participants: { include: { player: { select: { id: true, nickname: true } } }, orderBy: { joinedAt: "asc" } },
+    },
+  });
+
+  const serialize = (gameCall: (typeof gameCalls)[number] | (typeof recentGameCalls)[number]) => ({
+    ...gameCall,
+    startTime: gameCall.startTime.toISOString(),
+    createdAt: gameCall.createdAt.toISOString(),
+  });
 
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-graphite-muted">
-          Кто в деле?
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-graphite">Играть</h1>
+        <p className="data-label">Кто в деле?</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-[-0.06em] text-graphite">Играть вместе</h1>
+        <p className="mt-2 max-w-xl text-sm leading-6 text-graphite-muted">Создай быстрый сбор, ответь на приглашение и сразу пойми, кто сегодня в игре.</p>
       </div>
-      <PlayClient players={players} gameCalls={serialized} />
+      <PlayClient players={players} gameCalls={gameCalls.map(serialize)} recentGameCalls={recentGameCalls.map(serialize)} />
     </div>
   );
 }

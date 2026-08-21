@@ -2,14 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check, ExternalLink, Send } from "lucide-react";
 
-export default function TelegramConnect({
-  playerId,
-  initiallyConnected,
-}: {
-  playerId: string;
-  initiallyConnected: boolean;
-}) {
+export default function TelegramConnect({ playerId, initiallyConnected }: { playerId: string; initiallyConnected: boolean }) {
   const [code, setCode] = useState<string | null>(null);
   const [botUsername, setBotUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -20,64 +15,36 @@ export default function TelegramConnect({
     setLoading(true);
     setError(null);
     try {
-      const [codeRes, botRes] = await Promise.all([
-        fetch("/api/telegram/link-code", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ playerId }),
-        }),
+      const [codeResponse, botResponse] = await Promise.all([
+        fetch("/api/telegram/link-code", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ playerId }) }),
         fetch("/api/telegram/bot-info"),
       ]);
-      const botData = await botRes.json();
-      if (!botData.enabled) {
-        setError("Telegram-бот пока не подключён администратором сайта.");
+      const botData = await botResponse.json();
+      if (!botData.enabled || !botData.username) {
+        setError("Telegram-бот ещё не подключён администратором. Сам Game Call продолжает работать на сайте.");
         return;
       }
-      const codeData = await codeRes.json();
+      const codeData = await codeResponse.json();
+      if (!codeResponse.ok || !codeData.code) throw new Error(codeData.error || "Не удалось создать ссылку");
       setCode(codeData.code);
-      setBotUsername(botData.username);
-    } catch {
-      setError("Ошибка соединения с сервером");
+      setBotUsername(String(botData.username).replace(/^@/, ""));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Ошибка соединения с сервером");
     } finally {
       setLoading(false);
     }
   }
 
   if (initiallyConnected) {
-    return <p className="text-xs text-accent-success">✓ Telegram подключён</p>;
+    return <div className="flex items-center gap-2 rounded-xl bg-[#eff8f2] px-3 py-2 text-xs font-semibold text-accent-success"><Check size={14} strokeWidth={2.2} />Telegram подключён — ответы на сборы придут прямо в бот.</div>;
   }
 
+  const deepLink = code && botUsername ? `https://t.me/${botUsername}?start=${code}` : null;
   return (
-    <div className="space-y-2 rounded-lg border border-hairline bg-paper p-4">
-      <p className="text-xs font-medium text-graphite">Telegram</p>
-      <p className="text-xs text-graphite-muted">
-        Подключите Telegram, чтобы получать уведомления о сборах.
-      </p>
-
-      {code ? (
-        <div className="space-y-1 text-xs">
-          <p className="text-graphite-muted">
-            Откройте {botUsername ? `@${botUsername}` : "NISHETA Bot"} в Telegram и отправьте:
-          </p>
-          <p className="font-medium text-graphite">/start {code}</p>
-          <p className="text-graphite-muted">Код действует 15 минут.</p>
-          <button
-            onClick={() => router.refresh()}
-            className="mt-1 rounded-md border border-hairline px-2 py-1 text-graphite-muted transition-colors hover:bg-paper-muted"
-          >
-            Я отправил(а) — проверить
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={connect}
-          disabled={loading}
-          className="rounded-md bg-graphite px-3 py-1.5 text-xs font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
-          {loading ? "..." : "Подключить Telegram"}
-        </button>
-      )}
-      {error && <p className="text-xs text-accent-danger">{error}</p>}
-    </div>
+    <section className="surface border-dashed p-4 sm:p-5">
+      <div className="flex items-start gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#edf6ff] text-[#229ED9]"><Send size={17} strokeWidth={1.75} /></span><div><p className="text-sm font-semibold text-graphite">Подключи Telegram</p><p className="mt-1 text-xs leading-5 text-graphite-muted">Получай Game Call, отвечай «Иду» в один тап и не пропускай сборы.</p></div></div>
+      {deepLink ? <div className="mt-4 rounded-xl bg-paper-muted/70 p-3"><a href={deepLink} target="_blank" rel="noreferrer" className="button-primary w-full"><Send className="mr-1.5" size={14} />Открыть бота и подключиться <ExternalLink className="ml-1.5" size={13} /></a><p className="mt-2 text-[10px] leading-4 text-graphite-muted">Telegram откроется с готовой командой. Нажми Start, затем вернись сюда.</p><button onClick={() => router.refresh()} className="button-quiet mt-1 w-full">Я подключился — обновить статус</button></div> : <button onClick={connect} disabled={loading} className="button-secondary mt-4">{loading ? "Готовим ссылку..." : "Подключить Telegram"}</button>}
+      {error && <p className="mt-3 text-xs font-medium leading-5 text-accent-danger">{error}</p>}
+    </section>
   );
 }
