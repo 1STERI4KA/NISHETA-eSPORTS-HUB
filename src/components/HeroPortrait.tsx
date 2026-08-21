@@ -114,9 +114,9 @@ export default function HeroPortrait() {
       facePositions.setZ(index, oval * 0.34);
     }
     faceGeometry.computeVertexNormals();
-    const faceMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.62, transparent: true, depthWrite: false });
+    const faceMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.62, transparent: true, depthWrite: true });
     const faceSurface = new THREE.Mesh(faceGeometry, faceMaterial);
-    faceSurface.position.set(0, 0.27, 0.94);
+    faceSurface.position.set(0, 0.27, 1.23);
     avatar.add(faceSurface);
 
     const textureLoader = new THREE.TextureLoader();
@@ -151,11 +151,11 @@ export default function HeroPortrait() {
     avatar.add(rightEar);
 
     const leftEye = makeEye();
-    leftEye.position.set(-0.39, 0.27, 1.31);
+    leftEye.position.set(-0.39, 0.27, 1.64);
     avatar.add(leftEye);
 
     const rightEye = makeEye();
-    rightEye.position.set(0.39, 0.27, 1.31);
+    rightEye.position.set(0.39, 0.27, 1.64);
     avatar.add(rightEye);
 
     const resize = () => {
