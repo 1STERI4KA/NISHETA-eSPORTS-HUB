@@ -4,67 +4,93 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  Home,
-  Gamepad2,
   BarChart3,
+  Gamepad2,
+  Home,
+  Menu,
+  Shield,
+  Sparkles,
+  Swords,
   Trophy,
   Users,
-  Menu,
   X,
 } from "lucide-react";
 
-const links = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/play", label: "Play", icon: Gamepad2 },
-  { href: "/dota2", label: "Dota 2", icon: BarChart3 },
-  { href: "/nisheta", label: "NISHETA", icon: Trophy },
-  { href: "/players", label: "Players", icon: Users },
+const navigation = [
+  {
+    title: "Главное",
+    links: [
+      { href: "/", label: "Главная", icon: Home },
+      { href: "/play", label: "Собрать игру", icon: Gamepad2 },
+      { href: "/lobby", label: "Лобби", icon: Swords },
+    ],
+  },
+  {
+    title: "Команда",
+    links: [
+      { href: "/players", label: "Игроки", icon: Users },
+      { href: "/dota2", label: "Dota 2", icon: Shield },
+      { href: "/dota2/stats", label: "Статистика", icon: BarChart3 },
+      { href: "/nisheta", label: "NISHETA", icon: Trophy },
+    ],
+  },
 ];
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="px-6 py-8">
-        <p className="text-sm font-semibold tracking-tight text-graphite">NISHETA</p>
-        <p className="text-xs text-graphite-muted">Esports Hub</p>
-      </div>
+    <div className="flex h-full flex-col px-3 py-4">
+      <Link href="/" onClick={onNavigate} className="mb-8 flex items-center gap-3 rounded-2xl px-3 py-3">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-graphite text-sm font-semibold text-paper shadow-sm">
+          N
+        </span>
+        <span>
+          <span className="block text-sm font-semibold tracking-[-0.04em] text-graphite">NISHETA</span>
+          <span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-graphite-muted">
+            Esports hub
+          </span>
+        </span>
+      </Link>
 
-      <nav className="flex-1 space-y-0.5 px-3">
-        {links.map((link) => {
-          const active =
-            link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
-          const Icon = link.icon;
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={onNavigate}
-              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                active
-                  ? "bg-paper-muted font-medium text-graphite"
-                  : "text-graphite-muted hover:bg-paper-muted hover:text-graphite"
-              }`}
-            >
-              <Icon size={16} strokeWidth={1.75} />
-              {link.label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 space-y-6">
+        {navigation.map((group) => (
+          <div key={group.title}>
+            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-graphite-muted/70">
+              {group.title}
+            </p>
+            <div className="space-y-1">
+              {group.links.map((link) => {
+                const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={onNavigate}
+                    className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 ${
+                      active
+                        ? "bg-paper-muted font-semibold text-graphite shadow-[inset_0_0_0_1px_rgba(17,17,17,0.03)]"
+                        : "text-graphite-muted hover:bg-paper-muted/70 hover:text-graphite"
+                    }`}
+                  >
+                    <Icon size={17} strokeWidth={active ? 2 : 1.65} className="shrink-0" />
+                    <span>{link.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      <div className="border-t border-hairline px-6 py-6">
-        <p className="text-xs font-medium leading-relaxed text-graphite-muted">
-          WE PLAY.
-          <br />
-          WE TRACK.
-          <br />
-          WE WIN.
+      <div className="mx-2 mt-6 rounded-2xl border border-hairline bg-paper-muted/60 p-4">
+        <Sparkles size={16} strokeWidth={1.7} className="mb-3 text-graphite" />
+        <p className="text-xs font-semibold leading-5 text-graphite">WE PLAY. WE TRACK. WE WIN.</p>
+        <p className="mt-2 text-[10px] leading-4 text-graphite-muted">
+          Приватный хаб команды NISHETA.
         </p>
-        <p className="mt-4 text-[10px] text-graphite-muted/60">
-          © {new Date().getFullYear()} NISHETA
-        </p>
+        <p className="mt-4 text-[10px] text-graphite-muted/70">© {new Date().getFullYear()} NISHETA</p>
       </div>
     </div>
   );
@@ -75,38 +101,39 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 border-r border-hairline bg-paper md:block">
+      <aside className="hidden w-[248px] shrink-0 border-r border-hairline bg-paper/85 backdrop-blur-xl md:block">
         <SidebarContent />
       </aside>
 
-      {/* Mobile top strip with menu button */}
-      <div className="flex items-center justify-between border-b border-hairline bg-paper px-4 py-3 md:hidden">
-        <span className="text-sm font-semibold text-graphite">NISHETA</span>
+      <div className="flex items-center justify-between border-b border-hairline bg-paper/85 px-4 py-3 backdrop-blur-xl md:hidden">
+        <Link href="/" className="flex items-center gap-2 text-sm font-semibold tracking-[-0.04em] text-graphite">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-graphite text-[10px] text-paper">N</span>
+          NISHETA
+        </Link>
         <button
           onClick={() => setMobileOpen(true)}
-          className="text-graphite-muted"
-          aria-label="Меню"
+          className="button-quiet -mr-2"
+          aria-label="Открыть меню"
         >
-          <Menu size={20} strokeWidth={1.75} />
+          <Menu size={20} strokeWidth={1.8} />
         </button>
       </div>
 
-      {/* Mobile slide-in panel */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div
-            className="absolute inset-0 bg-black/30"
+          <button
+            className="absolute inset-0 bg-graphite/25 backdrop-blur-[1px]"
             onClick={() => setMobileOpen(false)}
+            aria-label="Закрыть меню"
           />
-          <div className="absolute inset-y-0 left-0 w-64 bg-paper shadow-xl">
-            <div className="flex justify-end px-4 pt-4">
-              <button onClick={() => setMobileOpen(false)} aria-label="Закрыть">
-                <X size={20} className="text-graphite-muted" />
+          <aside className="absolute inset-y-0 left-0 w-[286px] max-w-[86vw] bg-paper shadow-2xl">
+            <div className="absolute right-3 top-3 z-10">
+              <button onClick={() => setMobileOpen(false)} className="button-quiet" aria-label="Закрыть меню">
+                <X size={19} strokeWidth={1.8} />
               </button>
             </div>
             <SidebarContent onNavigate={() => setMobileOpen(false)} />
-          </div>
+          </aside>
         </div>
       )}
     </>

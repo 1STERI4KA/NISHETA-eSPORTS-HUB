@@ -1,123 +1,19 @@
+import { Crown, Skull } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { computeSingleGameRecords, computeStreaks, type RecordRow } from "@/lib/hallOfFame";
 
 export const dynamic = "force-dynamic";
 
 export default async function HallOfFamePage() {
-  const rawRows = await prisma.matchPlayer.findMany({
-    where: { player: { isActive: true } },
-    select: {
-      playerId: true,
-      heroName: true,
-      kills: true,
-      deaths: true,
-      assists: true,
-      gpm: true,
-      win: true,
-      player: { select: { nickname: true } },
-      match: { select: { startTime: true, duration: true } },
-    },
-  });
-
-  const rows: RecordRow[] = rawRows.map((r) => ({
-    playerId: r.playerId,
-    nickname: r.player.nickname,
-    heroName: r.heroName,
-    kills: r.kills,
-    deaths: r.deaths,
-    assists: r.assists,
-    gpm: r.gpm,
-    win: r.win,
-    startTime: r.match.startTime,
-    duration: r.match.duration,
-  }));
-
+  const rawRows = await prisma.matchPlayer.findMany({ where: { player: { isActive: true } }, select: { playerId: true, heroName: true, kills: true, deaths: true, assists: true, gpm: true, win: true, player: { select: { nickname: true } }, match: { select: { startTime: true, duration: true } } } });
+  const rows: RecordRow[] = rawRows.map((row) => ({ playerId: row.playerId, nickname: row.player.nickname, heroName: row.heroName, kills: row.kills, deaths: row.deaths, assists: row.assists, gpm: row.gpm, win: row.win, startTime: row.match.startTime, duration: row.match.duration }));
   const { fame, shame } = computeSingleGameRecords(rows);
   const { bestWinStreak, bestLossStreak } = computeStreaks(rows);
 
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="eyebrow">NISHETA</p>
-        <h1 className="font-display text-3xl text-parchment">Hall of Fame / Hall of Shame</h1>
-        <p className="mt-1 max-w-lg font-mono text-xs text-muted">
-          Лучшие и худшие игры за всю историю синхронизированных матчей — тоже считается само.
-        </p>
-      </div>
-
-      {rows.length === 0 ? (
-        <div className="panel p-8 text-center">
-          <p className="font-mono text-sm text-muted">
-            Пока нет данных — синхронизируй матчи на дашборде.
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2">
-          <section className="panel p-6">
-            <h2 className="eyebrow mb-4 text-brass">🏆 Hall of Fame</h2>
-            <div className="space-y-3">
-              {fame.map((entry) =>
-                entry.row ? (
-                  <div
-                    key={entry.title}
-                    className="flex items-center justify-between border-b border-ink-line/60 pb-2 font-mono text-xs last:border-none"
-                  >
-                    <div>
-                      <p className="text-muted">{entry.title}</p>
-                      <p className="text-parchment">
-                        {entry.row.nickname} · {entry.row.heroName}
-                      </p>
-                    </div>
-                    <span className="text-brass">{entry.valueLabel(entry.row)}</span>
-                  </div>
-                ) : null
-              )}
-              {bestWinStreak.count > 0 && (
-                <div className="flex items-center justify-between border-b border-ink-line/60 pb-2 font-mono text-xs last:border-none">
-                  <p className="text-muted">Самая длинная победная серия</p>
-                  <span className="text-brass">
-                    {bestWinStreak.nickname} · {bestWinStreak.count} побед подряд
-                  </span>
-                </div>
-              )}
-            </div>
-          </section>
-
-          <section className="panel p-6">
-            <h2 className="eyebrow mb-4 text-dire">💀 Hall of Shame</h2>
-            <div className="space-y-3">
-              {shame.map((entry) =>
-                entry.row ? (
-                  <div
-                    key={entry.title}
-                    className="flex items-center justify-between border-b border-ink-line/60 pb-2 font-mono text-xs last:border-none"
-                  >
-                    <div>
-                      <p className="text-muted">{entry.title}</p>
-                      <p className="text-parchment">
-                        {entry.row.nickname} · {entry.row.heroName}
-                      </p>
-                    </div>
-                    <span className="text-dire">{entry.valueLabel(entry.row)}</span>
-                  </div>
-                ) : (
-                  <div key={entry.title} className="font-mono text-xs text-muted">
-                    {entry.title}: пока недостаточно данных
-                  </div>
-                )
-              )}
-              {bestLossStreak.count > 0 && (
-                <div className="flex items-center justify-between border-b border-ink-line/60 pb-2 font-mono text-xs last:border-none">
-                  <p className="text-muted">Самая длинная серия поражений</p>
-                  <span className="text-dire">
-                    {bestLossStreak.nickname} · {bestLossStreak.count} поражений подряд
-                  </span>
-                </div>
-              )}
-            </div>
-          </section>
-        </div>
-      )}
+    <div className="space-y-7">
+      <section><p className="data-label">NISHETA / история матчей</p><h1 className="mt-2 text-3xl font-semibold tracking-[-0.06em] text-graphite sm:text-4xl">Hall of Fame <span className="text-graphite-muted">/ Hall of Shame</span></h1><p className="mt-2 max-w-2xl text-sm leading-6 text-graphite-muted">Лучшие и худшие игры за всю историю синхронизированных матчей. Всё считается автоматически.</p></section>
+      {rows.length === 0 ? <section className="surface p-10 text-center"><p className="text-sm font-semibold text-graphite">Пока нет данных для рекордов</p><p className="mt-1 text-xs text-graphite-muted">Синхронизируй матчи на главной, и таблица заполнится автоматически.</p></section> : <section className="grid gap-5 lg:grid-cols-2"><article className="surface overflow-hidden"><div className="flex items-center gap-3 border-b border-hairline px-6 py-5"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff8ed] text-[#90682f]"><Crown size={19} strokeWidth={1.65} /></span><div><p className="data-label">Лучшие моменты</p><h2 className="mt-1 text-lg font-semibold tracking-[-0.04em] text-graphite">Hall of Fame</h2></div></div><div className="divide-y divide-hairline px-6">{fame.map((entry) => entry.row ? <div key={entry.title} className="flex items-center justify-between gap-4 py-4"><div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-graphite-muted">{entry.title}</p><p className="mt-1 truncate text-sm font-semibold text-graphite">{entry.row.nickname} <span className="font-normal text-graphite-muted">· {entry.row.heroName}</span></p></div><span className="shrink-0 text-xs font-semibold text-[#90682f]">{entry.valueLabel(entry.row)}</span></div> : null)}{bestWinStreak.count > 0 && <div className="flex items-center justify-between gap-4 py-4"><div><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-graphite-muted">Победная серия</p><p className="mt-1 text-sm font-semibold text-graphite">{bestWinStreak.nickname}</p></div><span className="text-xs font-semibold text-[#90682f]">{bestWinStreak.count} подряд</span></div>}</div></article><article className="surface overflow-hidden"><div className="flex items-center gap-3 border-b border-hairline px-6 py-5"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fdf1ef] text-accent-danger"><Skull size={19} strokeWidth={1.65} /></span><div><p className="data-label">Легендарные провалы</p><h2 className="mt-1 text-lg font-semibold tracking-[-0.04em] text-graphite">Hall of Shame</h2></div></div><div className="divide-y divide-hairline px-6">{shame.map((entry) => entry.row ? <div key={entry.title} className="flex items-center justify-between gap-4 py-4"><div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-graphite-muted">{entry.title}</p><p className="mt-1 truncate text-sm font-semibold text-graphite">{entry.row.nickname} <span className="font-normal text-graphite-muted">· {entry.row.heroName}</span></p></div><span className="shrink-0 text-xs font-semibold text-accent-danger">{entry.valueLabel(entry.row)}</span></div> : <div key={entry.title} className="py-4 text-xs text-graphite-muted">{entry.title}: пока недостаточно данных</div>)}{bestLossStreak.count > 0 && <div className="flex items-center justify-between gap-4 py-4"><div><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-graphite-muted">Серия поражений</p><p className="mt-1 text-sm font-semibold text-graphite">{bestLossStreak.nickname}</p></div><span className="text-xs font-semibold text-accent-danger">{bestLossStreak.count} подряд</span></div>}</div></article></section>}
     </div>
   );
 }

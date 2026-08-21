@@ -3,26 +3,81 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  * {
+    border-color: theme("colors.hairline");
+  }
+
   body {
-    @apply bg-ink text-parchment font-body;
-    background-image: theme("backgroundImage.grain");
+    @apply min-h-screen bg-[#f5f5f7] font-body text-graphite antialiased;
+    background-image:
+      radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.94), transparent 32rem),
+      radial-gradient(circle at 100% 20%, rgba(255, 255, 255, 0.78), transparent 34rem);
   }
 
   ::selection {
-    @apply bg-brass/30 text-parchment;
+    @apply bg-graphite text-paper;
+  }
+
+  button,
+  input,
+  select {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
 @layer components {
   .eyebrow {
-    @apply font-mono text-xs uppercase tracking-[0.2em] text-brass;
+    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-graphite-muted;
   }
 
   .panel {
-    @apply rounded-lg border border-ink-line bg-ink-soft/60 backdrop-blur-sm;
+    @apply rounded-[22px] border border-hairline bg-paper shadow-[0_10px_30px_rgba(17,17,17,0.035)];
   }
 
   .ribbon {
-    @apply inline-flex -rotate-2 items-center gap-1.5 rounded-sm border border-brass/40 bg-brass/10 px-3 py-1.5 font-mono text-xs text-brass-bright shadow-[0_1px_0_rgba(0,0,0,0.4)];
+    @apply inline-flex items-center rounded-full border border-[#eadac0] bg-[#fff8ed] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#90682f];
+  }
+
+  .surface {
+    @apply rounded-[22px] border border-hairline bg-paper shadow-[0_10px_30px_rgba(17,17,17,0.035)];
+  }
+
+  .surface-dark {
+    @apply rounded-[26px] bg-graphite text-paper shadow-[0_18px_45px_rgba(17,17,17,0.16)];
+    background-image:
+      radial-gradient(circle at 74% 18%, rgba(255,255,255,0.14), transparent 17rem),
+      linear-gradient(135deg, #181818 0%, #080808 100%);
+  }
+
+  .page-heading {
+    @apply flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between;
+  }
+
+  .button-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-graphite px-4 py-2.5 text-xs font-semibold text-paper transition duration-200 hover:-translate-y-px hover:bg-black focus:outline-none focus:ring-2 focus:ring-graphite/25 disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .button-secondary {
+    @apply inline-flex items-center justify-center rounded-xl border border-hairline bg-paper px-4 py-2.5 text-xs font-semibold text-graphite transition duration-200 hover:-translate-y-px hover:bg-paper-muted focus:outline-none focus:ring-2 focus:ring-graphite/15 disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .button-quiet {
+    @apply inline-flex items-center justify-center rounded-lg px-3 py-2 text-xs font-medium text-graphite-muted transition-colors hover:bg-paper-muted hover:text-graphite focus:outline-none;
+  }
+
+  .data-label {
+    @apply text-[10px] font-semibold uppercase tracking-[0.12em] text-graphite-muted;
+  }
+
+  .metric-value {
+    @apply mt-1 text-2xl font-semibold tracking-[-0.04em] text-graphite;
+  }
+
+  .app-input {
+    @apply w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-sm text-graphite outline-none transition placeholder:text-graphite-muted/70 focus:border-graphite/40 focus:ring-4 focus:ring-graphite/[0.04];
   }
 }

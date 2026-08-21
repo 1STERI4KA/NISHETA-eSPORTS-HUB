@@ -1,77 +1,35 @@
 import Link from "next/link";
+import { ArrowUpRight, Award, Flag, Medal, Sparkles } from "lucide-react";
 
 const sections = [
-  {
-    title: "Weekly Awards",
-    description: "Игрок недели, фармер, киллер, фидер, MVP.",
-    href: "/",
-    status: "На дашборде",
-  },
-  {
-    title: "Достижения",
-    description: "Личные ачивки за приколы и рекорды — считаются автоматически.",
-    href: "/nisheta/achievements",
-    status: "Открыть",
-  },
-  {
-    title: "Челленджи",
-    description: "Игровые цели со счётчиком — засчитываются автоматически.",
-    href: "/nisheta/challenges",
-    status: "Открыть",
-  },
-  {
-    title: "Hall of Fame / Hall of Shame",
-    description: "Лучшие и худшие моменты компании — тоже считается само.",
-    href: "/nisheta/hall-of-fame",
-    status: "Открыть",
-  },
-  {
-    title: "Мемы",
-    description: "Мем недели и внутренние приколы.",
-    href: null,
-    status: "Скоро",
-  },
+  { title: "Награды недели", description: "MVP, фармер, киллер, фидер и другие герои текущей недели.", href: "/", status: "На главной", icon: Award },
+  { title: "Достижения", description: "Личные ачивки за игровые рекорды и внутренние приколы.", href: "/nisheta/achievements", status: "Открыть", icon: Medal },
+  { title: "Челленджи", description: "Игровые цели, которые автоматически засчитываются по матчам.", href: "/nisheta/challenges", status: "Открыть", icon: Flag },
+  { title: "Hall of Fame", description: "Лучшие и худшие моменты компании — вся история в одном месте.", href: "/nisheta/hall-of-fame", status: "Открыть", icon: Sparkles },
 ];
 
 export const dynamic = "force-dynamic";
 
 export default function NishetaPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="eyebrow">Тусовка</p>
-        <h1 className="font-display text-3xl text-parchment">NISHETA</h1>
-        <p className="mt-1 max-w-lg font-mono text-xs text-muted">
-          Фановая и социальная часть — рейтинги, достижения, мемы и всё, что делает нас нами.
-        </p>
-      </div>
+    <div className="space-y-7">
+      <section className="surface-dark overflow-hidden p-7 sm:p-9">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">Команда вне матчей</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.07em] text-paper sm:text-5xl">NISHETA</h1>
+        <p className="mt-4 max-w-xl text-sm leading-6 text-white/58">Рейтинги, достижения, челленджи и моменты, которые делают команду командой.</p>
+      </section>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {sections.map((s) => {
-          const content = (
-            <div className="panel flex h-full flex-col justify-between gap-3 p-5">
-              <div>
-                <h2 className="font-display text-lg text-parchment">{s.title}</h2>
-                <p className="mt-1 font-mono text-xs text-muted">{s.description}</p>
-              </div>
-              <span
-                className={`self-start font-mono text-xs ${
-                  s.href ? "text-brass" : "text-muted"
-                }`}
-              >
-                {s.status}
-              </span>
-            </div>
-          );
-          return s.href ? (
-            <Link key={s.title} href={s.href} className="transition-opacity hover:opacity-80">
-              {content}
+      <section className="grid gap-4 md:grid-cols-2">
+        {sections.map((section) => {
+          const Icon = section.icon;
+          return (
+            <Link key={section.title} href={section.href} className="group surface flex min-h-[205px] flex-col justify-between p-6 transition duration-200 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(17,17,17,0.08)]">
+              <div className="flex items-start justify-between gap-4"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-paper-muted text-graphite"><Icon size={19} strokeWidth={1.65} /></span><ArrowUpRight size={17} strokeWidth={1.7} className="text-graphite-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" /></div>
+              <div><p className="text-lg font-semibold tracking-[-0.04em] text-graphite">{section.title}</p><p className="mt-2 max-w-md text-xs leading-5 text-graphite-muted">{section.description}</p><span className="mt-4 inline-flex text-[10px] font-semibold uppercase tracking-[0.11em] text-graphite-muted">{section.status}</span></div>
             </Link>
-          ) : (
-            <div key={s.title}>{content}</div>
           );
         })}
-      </div>
+      </section>
     </div>
   );
 }

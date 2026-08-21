@@ -1,18 +1,22 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { ArrowUpRight, Gamepad2, UserRound } from "lucide-react";
+import AvatarInitials from "@/components/AvatarInitials";
 
 const STORAGE_KEY = "nisheta_player_id";
 
 interface Player {
   id: string;
   nickname: string;
+  avatarUrl: string | null;
 }
 interface GameCallPlayerRef {
   id: string;
   nickname: string;
+  avatarUrl: string | null;
 }
 interface Participant {
   id: string;
@@ -44,10 +48,6 @@ function timeLabel(startTime: string) {
   return `через ${Math.round(diffMin / 60)} ч`;
 }
 
-function initials(name: string) {
-  return name.slice(0, 2).toUpperCase();
-}
-
 export default function DashboardPlayerWidgets({
   players,
   activeGameCall,
@@ -67,6 +67,7 @@ export default function DashboardPlayerWidgets({
 
   const me = players.find((p) => p.id === playerId);
   const myStats = me ? playerStats[me.id] : null;
+  const joined = activeGameCall && me ? activeGameCall.participants.some((p) => p.player.id === me.id) : false;
 
   async function act(url: string) {
     if (!me) return;
@@ -83,126 +84,90 @@ export default function DashboardPlayerWidgets({
     }
   }
 
-  const joined =
-    activeGameCall && me
-      ? activeGameCall.participants.some((p) => p.player.id === me.id)
-      : false;
-
   return (
-    <div className="grid gap-6 sm:grid-cols-2">
-      {/* Active Game Call */}
-      <section className="rounded-lg border border-hairline bg-paper p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xs font-medium uppercase tracking-wide text-graphite-muted">
-            Active Game Call
-          </h2>
-          <Link href="/play" className="text-xs text-graphite-muted underline underline-offset-2">
-            Открыть Play →
-          </Link>
+    <section className="grid gap-5 xl:grid-cols-12">
+      <article className="surface overflow-hidden xl:col-span-7">
+        <div className="flex items-center justify-between border-b border-hairline px-6 py-5">
+          <div>
+            <p className="data-label">Live Game Call</p>
+            <h2 className="mt-1 text-lg font-semibold tracking-[-0.04em] text-graphite">Сбор команды</h2>
+          </div>
+          <Link href="/play" className="button-quiet">Открыть Play <ArrowUpRight className="ml-1" size={14} /></Link>
         </div>
 
         {!activeGameCall ? (
-          <div className="flex flex-col items-start gap-3 py-4">
-            <p className="text-sm text-graphite-muted">No active game.</p>
-            <Link
-              href="/play"
-              className="rounded-md bg-graphite px-4 py-2 text-xs font-medium text-paper transition-opacity hover:opacity-90"
-            >
-              Create Game
-            </Link>
+          <div className="flex min-h-[190px] flex-col items-start justify-center px-6 py-7">
+            <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-paper-muted text-graphite"><Gamepad2 size={19} strokeWidth={1.7} /></span>
+            <p className="text-base font-semibold tracking-[-0.03em] text-graphite">Активных сборов нет</p>
+            <p className="mt-1 max-w-md text-xs leading-5 text-graphite-muted">Открой Play, выбери себя и создай Game Call для команды.</p>
+            <Link href="/play" className="button-primary mt-5">Создать Game Call</Link>
           </div>
         ) : (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-accent-dota">
-                {gameLabels[activeGameCall.game] ?? activeGameCall.game}
-              </span>
-              <span className="text-xs text-graphite-muted">
-                {timeLabel(activeGameCall.startTime)}
-              </span>
-            </div>
-            <p className="text-sm text-graphite">
-              {activeGameCall.creator.nickname} собирает катку
-            </p>
-            <div className="flex items-center justify-between">
-              <div className="flex -space-x-2">
-                {activeGameCall.participants.map((p) => (
-                  <div
-                    key={p.id}
-                    title={p.player.nickname}
-                    className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-paper bg-paper-muted text-[10px] font-medium text-graphite"
-                  >
-                    {initials(p.player.nickname)}
-                  </div>
-                ))}
+          <div className="px-6 py-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <span className="inline-flex rounded-full bg-[#fbedeb] px-2.5 py-1 text-[10px] font-semibold text-[#c23c2a]">{gameLabels[activeGameCall.game] ?? activeGameCall.game}</span>
+                <h3 className="mt-3 text-xl font-semibold tracking-[-0.045em] text-graphite">Лобби {activeGameCall.creator.nickname}</h3>
+                <p className="mt-1 text-xs text-graphite-muted">Старт {timeLabel(activeGameCall.startTime)} · {activeGameCall.status === "ready" ? "состав готов" : "ищем игроков"}</p>
               </div>
-              <span className="text-xs text-graphite-muted">
-                {activeGameCall.participants.length} / {activeGameCall.playersNeeded}
-              </span>
+              <span className="rounded-xl bg-paper-muted px-3 py-2 text-xs font-semibold text-graphite">{activeGameCall.participants.length} / {activeGameCall.playersNeeded}</span>
+            </div>
+
+            <div className="mt-6 flex items-center gap-2">
+              {activeGameCall.participants.slice(0, 6).map((p) => (
+                <div key={p.id} title={p.player.nickname} className="rounded-full border-2 border-paper shadow-sm">
+                  <AvatarInitials name={p.player.nickname} avatarUrl={p.player.avatarUrl} size="sm" />
+                </div>
+              ))}
+              {activeGameCall.participants.length === 0 && <p className="text-xs text-graphite-muted">Первый игрок ещё не присоединился.</p>}
             </div>
 
             {me ? (
               <button
-                onClick={() =>
-                  act(
-                    joined
-                      ? `/api/gamecalls/${activeGameCall.id}/leave`
-                      : `/api/gamecalls/${activeGameCall.id}/join`
-                  )
-                }
+                onClick={() => act(joined ? `/api/gamecalls/${activeGameCall.id}/leave` : `/api/gamecalls/${activeGameCall.id}/join`)}
                 disabled={loading}
-                className={`w-full rounded-md px-4 py-2 text-xs font-medium transition-opacity hover:opacity-90 disabled:opacity-50 ${
-                  joined
-                    ? "border border-hairline text-graphite-muted"
-                    : "bg-graphite text-paper"
-                }`}
+                className={`mt-6 w-full ${joined ? "button-secondary" : "button-primary"}`}
               >
-                {loading ? "..." : joined ? "CAN'T JOIN" : "I'M IN"}
+                {loading ? "Обновляем..." : joined ? "Я не иду" : "Я иду"}
               </button>
             ) : (
-              <Link
-                href="/play"
-                className="block w-full rounded-md border border-hairline px-4 py-2 text-center text-xs text-graphite-muted"
-              >
-                Выбери себя на Play →
-              </Link>
+              <Link href="/play" className="button-secondary mt-6 w-full">Сначала выбери себя</Link>
             )}
           </div>
         )}
-      </section>
+      </article>
 
-      {/* My Stats */}
-      <section className="rounded-lg border border-hairline bg-paper p-6">
-        <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-graphite-muted">
-          My Stats
-        </h2>
-        {!me ? (
-          <p className="text-sm text-graphite-muted">
-            Выбери, кто ты, на странице{" "}
-            <Link href="/play" className="underline underline-offset-2">
-              Play
-            </Link>
-            , чтобы увидеть личную статистику.
-          </p>
-        ) : !myStats || myStats.games === 0 ? (
-          <p className="text-sm text-graphite-muted">
-            У {me.nickname} пока нет синхронизированных матчей.
-          </p>
-        ) : (
-          <dl className="grid grid-cols-2 gap-y-3 text-sm">
-            <dt className="text-graphite-muted">Matches</dt>
-            <dd className="text-right text-graphite">{myStats.games}</dd>
-            <dt className="text-graphite-muted">Win Rate</dt>
-            <dd className="text-right text-graphite">
-              {myStats.winrate !== null ? `${myStats.winrate}%` : "—"}
-            </dd>
-            <dt className="text-graphite-muted">K / D / A</dt>
-            <dd className="text-right text-graphite">
-              {myStats.avgK} / {myStats.avgD} / {myStats.avgA}
-            </dd>
-          </dl>
-        )}
-      </section>
-    </div>
+      <article className="surface xl:col-span-5">
+        <div className="border-b border-hairline px-6 py-5">
+          <p className="data-label">Моя статистика</p>
+          <h2 className="mt-1 text-lg font-semibold tracking-[-0.04em] text-graphite">Текущая форма</h2>
+        </div>
+        <div className="p-6">
+          {!me ? (
+            <div className="flex min-h-[166px] flex-col justify-center">
+              <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-paper-muted text-graphite"><UserRound size={19} strokeWidth={1.7} /></span>
+              <p className="text-sm font-semibold text-graphite">Выбери своего игрока</p>
+              <p className="mt-1 text-xs leading-5 text-graphite-muted">Это нужно только чтобы показывать личную статистику и быстрые действия в Game Call.</p>
+              <Link href="/play" className="mt-4 text-xs font-semibold text-graphite underline underline-offset-4">Выбрать себя на Play</Link>
+            </div>
+          ) : !myStats || myStats.games === 0 ? (
+            <div className="flex min-h-[166px] flex-col justify-center">
+              <div className="flex items-center gap-3"><AvatarInitials name={me.nickname} avatarUrl={me.avatarUrl} size="md" /><div><p className="text-sm font-semibold text-graphite">{me.nickname}</p><p className="text-xs text-graphite-muted">Матчей пока нет</p></div></div>
+              <p className="mt-5 text-xs leading-5 text-graphite-muted">После первой синхронизации Dota-матчей здесь появятся твои показатели.</p>
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center gap-3"><AvatarInitials name={me.nickname} avatarUrl={me.avatarUrl} size="md" /><div><p className="text-sm font-semibold text-graphite">{me.nickname}</p><p className="text-xs text-graphite-muted">#{Object.keys(playerStats).length > 0 ? "NISHETA" : "—"} player</p></div></div>
+              <dl className="mt-6 grid grid-cols-3 divide-x divide-hairline rounded-2xl bg-paper-muted/70 py-3">
+                <div className="px-3 text-center"><dt className="data-label">Матчи</dt><dd className="mt-1 text-base font-semibold tracking-[-0.04em] text-graphite">{myStats.games}</dd></div>
+                <div className="px-3 text-center"><dt className="data-label">Винрейт</dt><dd className="mt-1 text-base font-semibold tracking-[-0.04em] text-graphite">{myStats.winrate !== null ? `${myStats.winrate}%` : "—"}</dd></div>
+                <div className="px-3 text-center"><dt className="data-label">KDA</dt><dd className="mt-1 text-base font-semibold tracking-[-0.04em] text-graphite">{myStats.avgK}/{myStats.avgD}/{myStats.avgA}</dd></div>
+              </dl>
+              <Link href="/players" className="mt-5 inline-flex items-center gap-1 text-xs font-semibold text-graphite transition-colors hover:text-graphite-muted">Открыть профиль <ArrowUpRight size={14} /></Link>
+            </div>
+          )}
+        </div>
+      </article>
+    </section>
   );
 }

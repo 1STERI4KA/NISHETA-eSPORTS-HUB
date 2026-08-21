@@ -1,3 +1,4 @@
+import { BarChart3, Crown, Swords } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -7,104 +8,25 @@ export default async function Dota2StatsPage() {
   const totalRecords = await prisma.matchPlayer.count();
   const totalWins = await prisma.matchPlayer.count({ where: { win: true } });
   const groupWinrate = totalRecords > 0 ? Math.round((totalWins / totalRecords) * 100) : null;
-
-  const heroCounts = await prisma.matchPlayer.groupBy({
-    by: ["heroName"],
-    _count: { heroName: true },
-    orderBy: { _count: { heroName: "desc" } },
-    take: 8,
-  });
-
-  const players = await prisma.player.findMany({
-    where: { isActive: true },
-    orderBy: { nickname: "asc" },
-  });
-
-  const leaderboard = await Promise.all(
-    players.map(async (p) => {
-      const rows = await prisma.matchPlayer.findMany({ where: { playerId: p.id } });
-      const games = rows.length;
-      const wins = rows.filter((r) => r.win).length;
-      const winrate = games > 0 ? Math.round((wins / games) * 100) : null;
-      const avgK = games > 0 ? (rows.reduce((s, r) => s + r.kills, 0) / games).toFixed(1) : "—";
-      const avgD = games > 0 ? (rows.reduce((s, r) => s + r.deaths, 0) / games).toFixed(1) : "—";
-      const avgA = games > 0 ? (rows.reduce((s, r) => s + r.assists, 0) / games).toFixed(1) : "—";
-      return { player: p, games, winrate, avgK, avgD, avgA };
-    })
-  );
+  const heroCounts = await prisma.matchPlayer.groupBy({ by: ["heroName"], _count: { heroName: true }, orderBy: { _count: { heroName: "desc" } }, take: 8 });
+  const players = await prisma.player.findMany({ where: { isActive: true }, orderBy: { nickname: "asc" } });
+  const leaderboard = await Promise.all(players.map(async (player) => {
+    const rows = await prisma.matchPlayer.findMany({ where: { playerId: player.id } });
+    const games = rows.length;
+    const wins = rows.filter((row) => row.win).length;
+    const winrate = games > 0 ? Math.round((wins / games) * 100) : null;
+    const avgK = games > 0 ? (rows.reduce((sum, row) => sum + row.kills, 0) / games).toFixed(1) : "—";
+    const avgD = games > 0 ? (rows.reduce((sum, row) => sum + row.deaths, 0) / games).toFixed(1) : "—";
+    const avgA = games > 0 ? (rows.reduce((sum, row) => sum + row.assists, 0) / games).toFixed(1) : "—";
+    return { player, games, winrate, avgK, avgD, avgA };
+  }));
   leaderboard.sort((a, b) => (b.winrate ?? -1) - (a.winrate ?? -1));
 
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="eyebrow">Dota 2</p>
-        <h1 className="font-display text-3xl text-parchment">Статистика</h1>
-      </div>
-
-      <div className="grid gap-6 sm:grid-cols-2">
-        <section className="panel p-6">
-          <h2 className="eyebrow mb-4">Общее</h2>
-          <dl className="grid grid-cols-2 gap-y-3 font-mono text-sm">
-            <dt className="text-muted">Синхронизировано матчей</dt>
-            <dd className="text-right text-parchment">{totalDistinctMatches}</dd>
-            <dt className="text-muted">Записей игроков</dt>
-            <dd className="text-right text-parchment">{totalRecords}</dd>
-            <dt className="text-muted">Винрейт (по записям)</dt>
-            <dd className="text-right text-parchment">
-              {groupWinrate !== null ? `${groupWinrate}%` : "—"}
-            </dd>
-          </dl>
-        </section>
-
-        <section className="panel p-6">
-          <h2 className="eyebrow mb-4">Топ героев группы</h2>
-          {heroCounts.length === 0 ? (
-            <p className="font-mono text-xs text-muted">Нет данных</p>
-          ) : (
-            <ol className="space-y-2">
-              {heroCounts.map((h, i) => (
-                <li
-                  key={h.heroName}
-                  className="flex items-center justify-between font-mono text-xs"
-                >
-                  <span className="text-parchment">
-                    {i + 1}. {h.heroName}
-                  </span>
-                  <span className="text-muted">{h._count.heroName} игр</span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
-      </div>
-
-      <section className="panel overflow-x-auto p-6">
-        <h2 className="eyebrow mb-4">Лидерборд</h2>
-        <table className="w-full min-w-[480px] font-mono text-xs">
-          <thead>
-            <tr className="border-b border-ink-line text-left text-muted">
-              <th className="pb-2">Игрок</th>
-              <th className="pb-2 text-right">Игр</th>
-              <th className="pb-2 text-right">Винрейт</th>
-              <th className="pb-2 text-right">K/D/A</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaderboard.map(({ player, games, winrate, avgK, avgD, avgA }) => (
-              <tr key={player.id} className="border-b border-ink-line/40 last:border-none">
-                <td className="py-2 text-parchment">{player.nickname}</td>
-                <td className="py-2 text-right text-muted">{games}</td>
-                <td className="py-2 text-right text-muted">
-                  {winrate !== null ? `${winrate}%` : "—"}
-                </td>
-                <td className="py-2 text-right text-muted">
-                  {avgK}/{avgD}/{avgA}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+    <div className="space-y-7">
+      <section className="page-heading"><div><p className="data-label">Dota 2 / аналитика</p><h1 className="mt-2 text-3xl font-semibold tracking-[-0.06em] text-graphite sm:text-4xl">Статистика команды</h1><p className="mt-2 max-w-xl text-sm leading-6 text-graphite-muted">Сводка синхронизированных матчей, любимых героев и формы каждого игрока.</p></div><div className="surface flex items-center gap-3 px-4 py-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#fbedeb] text-[#c23c2a]"><Swords size={17} strokeWidth={1.7} /></span><div><p className="text-lg font-semibold tracking-[-0.04em] text-graphite">Dota 2</p><p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-graphite-muted">командные данные</p></div></div></section>
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><article className="surface p-5"><p className="data-label">Матчи</p><p className="metric-value">{totalDistinctMatches}</p><p className="mt-1 text-xs text-graphite-muted">уникальных игр в базе</p></article><article className="surface p-5"><p className="data-label">Записи игроков</p><p className="metric-value">{totalRecords}</p><p className="mt-1 text-xs text-graphite-muted">строк игровой статистики</p></article><article className="surface p-5 sm:col-span-2 lg:col-span-1"><p className="data-label">Винрейт</p><p className="metric-value">{groupWinrate !== null ? `${groupWinrate}%` : "—"}</p><p className="mt-1 text-xs text-graphite-muted">по всем записям игроков</p></article></section>
+      <section className="grid gap-5 xl:grid-cols-12"><article className="surface p-6 xl:col-span-4"><div className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#fff8ed] text-[#90682f]"><Crown size={17} strokeWidth={1.7} /></span><div><p className="data-label">Пул команды</p><h2 className="mt-1 text-lg font-semibold tracking-[-0.04em] text-graphite">Топ героев</h2></div></div>{heroCounts.length === 0 ? <p className="mt-6 text-sm text-graphite-muted">Нет данных</p> : <ol className="mt-5 divide-y divide-hairline">{heroCounts.map((hero, index) => <li key={hero.heroName} className="flex items-center justify-between py-3 first:pt-0 last:pb-0"><span className="text-sm font-semibold text-graphite"><span className="mr-3 text-xs text-graphite-muted">{index + 1}</span>{hero.heroName}</span><span className="text-xs font-semibold text-graphite-muted">{hero._count.heroName} игр</span></li>)}</ol>}</article><article className="surface overflow-hidden xl:col-span-8"><div className="flex items-center gap-3 border-b border-hairline px-6 py-5"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-paper-muted text-graphite"><BarChart3 size={17} strokeWidth={1.7} /></span><div><p className="data-label">Лидерборд</p><h2 className="mt-1 text-lg font-semibold tracking-[-0.04em] text-graphite">Форма игроков</h2></div></div><div className="overflow-x-auto px-6"><table className="w-full min-w-[530px] text-left text-xs"><thead><tr className="border-b border-hairline text-[10px] font-semibold uppercase tracking-[0.1em] text-graphite-muted"><th className="py-4">Игрок</th><th className="py-4 text-right">Игр</th><th className="py-4 text-right">Винрейт</th><th className="py-4 text-right">K / D / A</th></tr></thead><tbody>{leaderboard.map(({ player, games, winrate, avgK, avgD, avgA }, index) => <tr key={player.id} className="border-b border-hairline last:border-none"><td className="py-3.5 font-semibold text-graphite"><span className="mr-3 text-graphite-muted">{index + 1}</span>{player.nickname}</td><td className="py-3.5 text-right text-graphite-muted">{games}</td><td className="py-3.5 text-right font-semibold text-graphite">{winrate !== null ? `${winrate}%` : "—"}</td><td className="py-3.5 text-right text-graphite-muted">{avgK} / {avgD} / {avgA}</td></tr>)}</tbody></table></div></article></section>
     </div>
   );
 }

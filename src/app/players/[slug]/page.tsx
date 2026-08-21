@@ -57,22 +57,29 @@ export default async function PlayerProfilePage({
   const unlockedAchievements = computeUnlockedAchievements(achievementRows);
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-4">
-        <AvatarInitials name={player.nickname} avatarUrl={player.avatarUrl} size="lg" />
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-graphite">{player.nickname}</h1>
-          <p className="text-xs text-graphite-muted">
-            {player.realName ? `${player.realName} · ` : ""}
-            {player.mainRole ? roleLabels[player.mainRole] : "Роль не указана"}
-            {player.steamId ? " · Steam привязан" : " · Steam не привязан"}
-          </p>
+    <div className="space-y-7">
+      <section className="surface flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <AvatarInitials name={player.nickname} avatarUrl={player.avatarUrl} size="lg" />
+          <div>
+            <p className="data-label">Профиль игрока</p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-[-0.06em] text-graphite">{player.nickname}</h1>
+            <p className="mt-1 text-xs text-graphite-muted">
+              {player.realName ? `${player.realName} · ` : ""}
+              {player.mainRole ? roleLabels[player.mainRole] : "Роль не указана"}
+              {player.steamId ? " · Steam привязан" : " · Steam не привязан"}
+            </p>
+          </div>
         </div>
-      </div>
+        <div className="rounded-2xl bg-paper-muted/70 px-4 py-3 text-left sm:text-right">
+          <p className="data-label">Всего матчей</p>
+          <p className="mt-1 text-xl font-semibold tracking-[-0.05em] text-graphite">{totalGames || "—"}</p>
+        </div>
+      </section>
 
       <div className="grid gap-6 sm:grid-cols-2">
-        <section className="rounded-lg border border-hairline bg-paper p-6">
-          <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-graphite-muted">
+        <section className="surface p-6">
+          <h2 className="data-label mb-4">
             Dota статистика
           </h2>
           {totalGames === 0 ? (
@@ -97,8 +104,8 @@ export default async function PlayerProfilePage({
           )}
         </section>
 
-        <section className="rounded-lg border border-hairline bg-paper p-6">
-          <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-graphite-muted">
+        <section className="surface p-6">
+          <h2 className="data-label mb-4">
             Внутренняя статистика
           </h2>
           <dl className="grid grid-cols-2 gap-y-3 text-sm">
@@ -114,8 +121,8 @@ export default async function PlayerProfilePage({
         </section>
       </div>
 
-      <section className="rounded-lg border border-hairline bg-paper p-6">
-        <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-graphite-muted">
+      <section className="surface p-6">
+        <h2 className="data-label mb-4">
           Достижения
         </h2>
         <div className="flex flex-wrap gap-2">
@@ -125,7 +132,7 @@ export default async function PlayerProfilePage({
               <span
                 key={a.id}
                 title={a.description}
-                className={`rounded-md border px-2 py-1 text-xs ${
+                className={`rounded-xl border px-2.5 py-1.5 text-xs ${
                   has
                     ? "border-graphite/20 bg-paper-muted text-graphite"
                     : "border-hairline text-graphite-muted/50"
@@ -141,15 +148,15 @@ export default async function PlayerProfilePage({
       <AchievementLegend />
 
       {matches.length > 0 && (
-        <section className="rounded-lg border border-hairline bg-paper p-6">
-          <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-graphite-muted">
+        <section className="surface p-6">
+          <h2 className="data-label mb-4">
             Последние матчи
           </h2>
           <ul className="space-y-3">
             {matches.map((m) => (
               <li
                 key={m.id}
-                className="flex items-center justify-between border-b border-hairline pb-2 text-xs last:border-none"
+                className="flex items-center justify-between border-b border-hairline py-2.5 text-xs first:pt-0 last:border-none last:pb-0"
               >
                 <span className="text-graphite">{m.heroName}</span>
                 <span className="text-graphite-muted">
