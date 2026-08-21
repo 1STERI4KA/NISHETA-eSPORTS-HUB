@@ -15,46 +15,36 @@ const RESTING_GAZE: GazeTarget = { x: 0, y: 0 };
 function makeEye() {
   const eye = new THREE.Group();
   const eyeWhite = new THREE.Mesh(
-    new THREE.SphereGeometry(0.16, 24, 18),
+    new THREE.SphereGeometry(0.105, 24, 18),
     new THREE.MeshPhysicalMaterial({ color: 0xf3f0eb, roughness: 0.24, metalness: 0.02 })
   );
-  eyeWhite.scale.set(1, 1, 0.66);
+  eyeWhite.scale.set(1, 1, 0.62);
   eye.add(eyeWhite);
 
   const iris = new THREE.Mesh(
-    new THREE.SphereGeometry(0.072, 20, 16),
+    new THREE.SphereGeometry(0.048, 20, 16),
     new THREE.MeshStandardMaterial({ color: 0x827452, roughness: 0.42, metalness: 0.05 })
   );
   iris.scale.set(1, 1, 0.26);
-  iris.position.z = 0.108;
+  iris.position.z = 0.073;
   eye.add(iris);
 
   const pupil = new THREE.Mesh(
-    new THREE.SphereGeometry(0.034, 18, 14),
+    new THREE.SphereGeometry(0.021, 18, 14),
     new THREE.MeshStandardMaterial({ color: 0x12100d, roughness: 0.3 })
   );
   pupil.scale.set(1, 1, 0.22);
-  pupil.position.z = 0.126;
+  pupil.position.z = 0.087;
   eye.add(pupil);
 
   const glint = new THREE.Mesh(
-    new THREE.SphereGeometry(0.012, 12, 10),
+    new THREE.SphereGeometry(0.008, 12, 10),
     new THREE.MeshBasicMaterial({ color: 0xffffff })
   );
-  glint.position.set(-0.018, 0.022, 0.138);
+  glint.position.set(-0.012, 0.014, 0.096);
   eye.add(glint);
 
   return eye;
-}
-
-function makeEyebrow() {
-  const eyebrow = new THREE.Mesh(
-    new THREE.CapsuleGeometry(0.042, 0.34, 6, 12),
-    new THREE.MeshStandardMaterial({ color: 0x3e2d24, roughness: 0.92 })
-  );
-  eyebrow.rotation.z = Math.PI / 2;
-  eyebrow.scale.set(1, 0.7, 0.52);
-  return eyebrow;
 }
 
 export default function HeroPortrait() {
@@ -110,19 +100,32 @@ export default function HeroPortrait() {
       clearcoatRoughness: 0.75,
     });
 
+    const head = new THREE.Mesh(new THREE.SphereGeometry(1.16, 64, 52), skinMaterial);
+    head.scale.set(0.87, 1.12, 0.88);
+    head.position.y = 0.28;
+    avatar.add(head);
+
+    const faceGeometry = new THREE.PlaneGeometry(2.34, 2.64, 48, 54);
+    const facePositions = faceGeometry.attributes.position;
+    for (let index = 0; index < facePositions.count; index += 1) {
+      const x = facePositions.getX(index) / 1.17;
+      const y = facePositions.getY(index) / 1.32;
+      const oval = Math.max(0, 1 - x * x) * Math.max(0, 1 - y * y * 0.52);
+      facePositions.setZ(index, oval * 0.34);
+    }
+    faceGeometry.computeVertexNormals();
+    const faceMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.62, transparent: true, depthWrite: false });
+    const faceSurface = new THREE.Mesh(faceGeometry, faceMaterial);
+    faceSurface.position.set(0, 0.27, 0.94);
+    avatar.add(faceSurface);
+
     const textureLoader = new THREE.TextureLoader();
     textureLoader.load("/hero-nisheta-portrait-front.png", (texture) => {
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      skinMaterial.map = texture;
-      skinMaterial.needsUpdate = true;
+      faceMaterial.map = texture;
+      faceMaterial.needsUpdate = true;
     });
-
-    const head = new THREE.Mesh(new THREE.SphereGeometry(1.16, 64, 52), skinMaterial);
-    head.scale.set(0.87, 1.12, 0.88);
-    head.rotation.y = Math.PI;
-    head.position.y = 0.28;
-    avatar.add(head);
 
     const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.43, 0.54, 0.9, 36), skinMaterial);
     neck.position.set(0, -1.16, -0.02);
@@ -147,36 +150,13 @@ export default function HeroPortrait() {
     rightEar.position.x = 0.94;
     avatar.add(rightEar);
 
-    const mouthCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-0.28, -0.47, 1.005),
-      new THREE.Vector3(-0.11, -0.52, 1.045),
-      new THREE.Vector3(0, -0.515, 1.058),
-      new THREE.Vector3(0.11, -0.52, 1.045),
-      new THREE.Vector3(0.28, -0.47, 1.005),
-    ]);
-    const mouth = new THREE.Mesh(
-      new THREE.TubeGeometry(mouthCurve, 24, 0.024, 8, false),
-      new THREE.MeshStandardMaterial({ color: 0x633833, roughness: 0.84 })
-    );
-    avatar.add(mouth);
-
     const leftEye = makeEye();
-    leftEye.position.set(-0.39, 0.23, 0.93);
+    leftEye.position.set(-0.39, 0.27, 1.31);
     avatar.add(leftEye);
 
     const rightEye = makeEye();
-    rightEye.position.set(0.39, 0.23, 0.93);
+    rightEye.position.set(0.39, 0.27, 1.31);
     avatar.add(rightEye);
-
-    const leftEyebrow = makeEyebrow();
-    leftEyebrow.position.set(-0.39, 0.54, 0.91);
-    leftEyebrow.rotation.y = -0.08;
-    avatar.add(leftEyebrow);
-
-    const rightEyebrow = makeEyebrow();
-    rightEyebrow.position.set(0.39, 0.54, 0.91);
-    rightEyebrow.rotation.y = 0.08;
-    avatar.add(rightEyebrow);
 
     const resize = () => {
       const width = Math.max(canvasHost.clientWidth, 1);
