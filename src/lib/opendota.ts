@@ -116,9 +116,36 @@ export interface OpenDotaMatchSummary {
   kills: number;
   deaths: number;
   assists: number;
-  gold_per_min: number;
-  xp_per_min: number;
-  last_hits: number;
+  gold_per_min?: number | null;
+  xp_per_min?: number | null;
+  last_hits?: number | null;
+}
+
+interface OpenDotaMatchDetail {
+  players?: Array<{
+    player_slot?: number;
+    gold_per_min?: number | null;
+    xp_per_min?: number | null;
+    last_hits?: number | null;
+  }>;
+}
+
+export async function fetchPlayerMatchEconomy(matchId: number, playerSlot: number) {
+  const response = await fetch(`https://api.opendota.com/api/matches/${matchId}`, {
+    next: { revalidate: 60 * 60 },
+  });
+  if (!response.ok) return null;
+
+  const match: OpenDotaMatchDetail = await response.json();
+  const player = match.players?.find((item) => item.player_slot === playerSlot);
+  if (!player) return null;
+
+  const gpm = typeof player.gold_per_min === "number" ? player.gold_per_min : null;
+  const xpm = typeof player.xp_per_min === "number" ? player.xp_per_min : null;
+  const lastHits = typeof player.last_hits === "number" ? player.last_hits : null;
+  if (gpm === null && xpm === null && lastHits === null) return null;
+
+  return { gpm, xpm, lastHits };
 }
 
 export async function fetchRecentMatches(

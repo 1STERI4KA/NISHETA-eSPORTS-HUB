@@ -39,8 +39,10 @@ export default async function PlayerProfilePage({
   const avgKills = totalGames > 0 ? (matches.reduce((s, m) => s + m.kills, 0) / totalGames).toFixed(1) : "—";
   const avgDeaths = totalGames > 0 ? (matches.reduce((s, m) => s + m.deaths, 0) / totalGames).toFixed(1) : "—";
   const avgAssists = totalGames > 0 ? (matches.reduce((s, m) => s + m.assists, 0) / totalGames).toFixed(1) : "—";
-  const avgGpm = totalGames > 0 ? Math.round(matches.reduce((s, m) => s + m.gpm, 0) / totalGames) : "—";
-  const avgXpm = totalGames > 0 ? Math.round(matches.reduce((s, m) => s + m.xpm, 0) / totalGames) : "—";
+  const matchesWithGpm = matches.filter((match) => match.gpm > 0);
+  const matchesWithXpm = matches.filter((match) => match.xpm > 0);
+  const avgGpm = matchesWithGpm.length > 0 ? Math.round(matchesWithGpm.reduce((sum, match) => sum + match.gpm, 0) / matchesWithGpm.length) : "—";
+  const avgXpm = matchesWithXpm.length > 0 ? Math.round(matchesWithXpm.reduce((sum, match) => sum + match.xpm, 0) / matchesWithXpm.length) : "—";
 
   const achievementRows = await prisma.matchPlayer.findMany({
     where: { playerId: player.id },

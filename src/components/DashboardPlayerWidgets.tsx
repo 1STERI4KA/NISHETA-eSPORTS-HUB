@@ -107,7 +107,7 @@ export default function DashboardPlayerWidgets({
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <span className="inline-flex rounded-full bg-[#fbedeb] px-2.5 py-1 text-[10px] font-semibold text-[#c23c2a]">{gameLabels[activeGameCall.game] ?? activeGameCall.game}</span>
-                <h3 className="mt-3 text-xl font-semibold tracking-[-0.045em] text-graphite">Лобби {activeGameCall.creator.nickname}</h3>
+                <h3 className="mt-3 text-xl font-semibold tracking-[-0.045em] text-graphite">Сбор {activeGameCall.creator.nickname}</h3>
                 <p className="mt-1 text-xs text-graphite-muted">Старт {timeLabel(activeGameCall.startTime)} · {activeGameCall.status === "ready" ? "состав готов" : "ищем игроков"}</p>
               </div>
               <span className="rounded-xl bg-paper-muted px-3 py-2 text-xs font-semibold text-graphite">{activeGameCall.participants.length} / {activeGameCall.playersNeeded}</span>

@@ -10,7 +10,6 @@ import {
   Menu,
   Shield,
   Sparkles,
-  Swords,
   Trophy,
   Users,
   X,
@@ -22,7 +21,6 @@ const navigation = [
     links: [
       { href: "/", label: "Главная", icon: Home },
       { href: "/play", label: "Собрать игру", icon: Gamepad2 },
-      { href: "/lobby", label: "Лобби", icon: Swords },
     ],
   },
   {

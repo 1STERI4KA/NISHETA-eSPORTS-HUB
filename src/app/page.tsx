@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, CircleDot, Gamepad2, Swords, Trophy, Users } from "lucide-react";
+import { ArrowUpRight, CircleDot, Gamepad2, Trophy, Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatDuration, formatDate } from "@/lib/format";
 import { getNishetaGroupStats } from "@/lib/nisheta-matches";
@@ -20,11 +20,6 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "asc" },
   });
 
-  const latestLobby = await prisma.lobby.findFirst({
-    where: { status: "active" },
-    orderBy: { createdAt: "desc" },
-    include: { players: { include: { player: true } } },
-  });
 
   const activeGameCallRaw = await prisma.gameCall.findFirst({
     where: { status: { in: ["waiting", "ready"] } },
@@ -128,7 +123,7 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div>
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-paper-muted text-graphite"><Swords size={18} strokeWidth={1.7} /></div>
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-paper-muted text-graphite"><Gamepad2 size={18} strokeWidth={1.7} /></div>
                 <p className="text-base font-semibold tracking-[-0.03em] text-graphite">Пока тихо</p>
                 <p className="mt-1 text-xs leading-5 text-graphite-muted">Создай сбор и пригласи команду в следующую катку.</p>
                 <Link href="/play" className="button-primary mt-5 w-full">Создать Game Call</Link>
@@ -221,17 +216,11 @@ export default async function DashboardPage() {
         </article>
 
         <article className="surface p-6 xl:col-span-5">
-          <div className="mb-5 flex items-center justify-between"><div><p className="data-label">Лобби</p><h2 className="mt-1 text-lg font-semibold tracking-[-0.04em] text-graphite">Командная комната</h2></div><Swords size={19} strokeWidth={1.65} className="text-graphite-muted" /></div>
-          {latestLobby ? (
-            <div>
-              <p className="text-sm font-semibold text-graphite">{latestLobby.players.length} игроков уже в лобби</p>
-              <p className="mt-1 text-xs text-graphite-muted">Создано {new Date(latestLobby.createdAt).toLocaleString("ru-RU")}</p>
-              <div className="mt-5 flex flex-wrap gap-2">{latestLobby.players.slice(0, 7).map((lp) => <span key={lp.id} className="rounded-full bg-paper-muted px-2.5 py-1 text-[10px] font-semibold text-graphite-muted">{lp.player.nickname}</span>)}</div>
-              <Link href={`/lobby/${latestLobby.id}`} className="button-primary mt-6 w-full">Открыть лобби</Link>
-            </div>
-          ) : (
-            <div><p className="text-sm font-semibold text-graphite">Лобби пока не создано</p><p className="mt-1 text-xs leading-5 text-graphite-muted">Собери состав, распределяй роли и готовь команды к игре.</p><Link href="/lobby" className="button-secondary mt-6 w-full">Создать лобби</Link></div>
-          )}
+          <p className="data-label">Как собираемся</p>
+          <h2 className="mt-1 text-lg font-semibold tracking-[-0.04em] text-graphite">Без обязательного 5v5</h2>
+          <p className="mt-3 text-sm leading-6 text-graphite-muted">Собери хоть двоих, хоть всю компанию. Участники отмечаются, когда состав готов — можно идти в игру.</p>
+          <div className="mt-5 grid grid-cols-3 gap-2"><div className="rounded-xl bg-paper-muted/70 p-3"><p className="text-[10px] font-semibold text-graphite-muted">01</p><p className="mt-2 text-xs font-semibold text-graphite">Создай сбор</p></div><div className="rounded-xl bg-paper-muted/70 p-3"><p className="text-[10px] font-semibold text-graphite-muted">02</p><p className="mt-2 text-xs font-semibold text-graphite">Соберите своих</p></div><div className="rounded-xl bg-paper-muted/70 p-3"><p className="text-[10px] font-semibold text-graphite-muted">03</p><p className="mt-2 text-xs font-semibold text-graphite">Играйте</p></div></div>
+          <Link href="/play" className="button-primary mt-6 w-full">Собрать игру</Link>
         </article>
       </section>
 
