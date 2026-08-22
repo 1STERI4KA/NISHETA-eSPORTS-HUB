@@ -39,7 +39,7 @@ export default function FriendCursor() {
       rendered.x += (target.x - rendered.x) * smoothing;
       rendered.y += (target.y - rendered.y) * smoothing;
 
-      cursor.style.transform = `translate3d(${rendered.x - 22}px, ${rendered.y - 22}px, 0)`;
+      cursor.style.transform = `translate3d(${rendered.x - 28}px, ${rendered.y - 34}px, 0)`;
       cursor.dataset.visible = String(visible && enabled);
       cursor.dataset.interactive = String(hoveringInteractive);
       cursor.dataset.pressed = String(pressed);
@@ -114,9 +114,6 @@ export default function FriendCursor() {
       data-visible="false"
       data-interactive="false"
       data-pressed="false"
-    >
-      <span className="friend-cursor-image" />
-      <span className="friend-cursor-pin" />
-    </div>
+    />
   );
 }
