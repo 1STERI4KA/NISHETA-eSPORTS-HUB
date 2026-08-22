@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, ChevronDown, Clock3, Copy, Gamepad2, Link2, Plus, Sparkles, UserPlus, UsersRound, X } from "lucide-react";
+import { BadgeCheck, CalendarDays, ChevronDown, Clock3, Copy, Gamepad2, Link2, LogOut, Plus, Sparkles, UserPlus, UsersRound, X } from "lucide-react";
 import TelegramConnect from "@/components/TelegramConnect";
+import SteamLoginButton from "@/components/SteamLoginButton";
 import ProfileSetup from "@/components/ProfileSetup";
 
 const STORAGE_KEY = "nisheta_player_id";
@@ -24,6 +25,7 @@ interface Player {
   notifyRecaps: boolean;
   notificationWindow: string;
 }
+interface SteamIdentity { authenticated: boolean; steamId: string | null; player: Player | null; }
 interface GameCallPlayerRef { id: string; nickname: string; }
 interface Participant { id: string; player: GameCallPlayerRef; }
 interface GameCall {
@@ -151,6 +153,11 @@ export default function PlayClient({ players, gameCalls, recentGameCalls }: { pl
   const [quickCreating, setQuickCreating] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [copiedCallId, setCopiedCallId] = useState<string | null>(null);
+  const [steam, setSteam] = useState<SteamIdentity | null>(null);
+  const [steamLoading, setSteamLoading] = useState(true);
+  const [linkPlayerId, setLinkPlayerId] = useState("");
+  const [linkingSteam, setLinkingSteam] = useState(false);
+  const [steamError, setSteamError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -160,6 +167,45 @@ export default function PlayClient({ players, gameCalls, recentGameCalls }: { pl
   function setPlayerId(id: string) {
     localStorage.setItem(STORAGE_KEY, id);
     setPlayerIdState(id);
+  }
+
+  async function refreshSteamIdentity() {
+    setSteamLoading(true);
+    try {
+      const response = await fetch("/api/auth/steam/me", { cache: "no-store" });
+      const data = await response.json() as SteamIdentity;
+      setSteam(data);
+      if (data.player) setPlayerId(data.player.id);
+    } catch {
+      setSteam(null);
+    } finally {
+      setSteamLoading(false);
+    }
+  }
+
+  useEffect(() => { void refreshSteamIdentity(); }, []);
+
+  async function linkSteamProfile() {
+    if (!linkPlayerId) return;
+    setLinkingSteam(true);
+    setSteamError(null);
+    try {
+      const response = await fetch("/api/auth/steam/link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ playerId: linkPlayerId }) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error ?? "Не удалось привязать Steam");
+      await refreshSteamIdentity();
+      router.refresh();
+    } catch (error) {
+      setSteamError(error instanceof Error ? error.message : "Не удалось привязать Steam");
+    } finally {
+      setLinkingSteam(false);
+    }
+  }
+
+  async function logoutSteam() {
+    await fetch("/api/auth/steam/logout", { method: "POST" });
+    setSteam({ authenticated: false, steamId: null, player: null });
+    setSteamError(null);
   }
 
   const me = players.find((player) => player.id === playerId);
@@ -266,6 +312,8 @@ export default function PlayClient({ players, gameCalls, recentGameCalls }: { pl
           {!showForm && <button onClick={() => openCustomForm()} disabled={!me} className="button-primary"><Plus className="mr-1.5" size={15} strokeWidth={2} />Другой сбор</button>}
         </div>
       </section>
+
+      <section className="surface p-4 sm:p-5">{steamLoading ? <p className="text-xs text-graphite-muted">Проверяем Steam…</p> : steam?.authenticated && steam.player ? <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eff8f2] text-accent-success"><BadgeCheck size={19} strokeWidth={1.7} /></span><div><p className="data-label">Steam подключён</p><p className="mt-1 text-sm font-semibold text-graphite">Ты автоматически выбран как {steam.player.nickname}</p></div></div><button onClick={logoutSteam} className="button-quiet"><LogOut className="mr-1" size={14} />Выйти</button></div> : steam?.authenticated ? <div><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="data-label">Steam подтверждён</p><p className="mt-1 text-sm font-semibold text-graphite">Выбери свой профиль один раз — дальше он будет находиться автоматически.</p></div><BadgeCheck size={20} className="text-accent-success" /></div><div className="mt-4 flex flex-wrap gap-2"><select value={linkPlayerId} onChange={(event) => setLinkPlayerId(event.target.value)} className="app-input max-w-xs"><option value="">Это я…</option>{players.map((player) => <option key={player.id} value={player.id}>{player.nickname}</option>)}</select><button onClick={linkSteamProfile} disabled={!linkPlayerId || linkingSteam} className="button-primary"><Link2 className="mr-1.5" size={14} />{linkingSteam ? "Привязываем..." : "Привязать Steam"}</button></div>{steamError && <p className="mt-3 text-xs font-medium text-accent-danger">{steamError}</p>}</div> : <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="data-label">Быстрый вход</p><p className="mt-1 text-sm font-semibold text-graphite">Войди через Steam — и свой игрок будет выбираться автоматически.</p></div><SteamLoginButton next="/play" /></div>}</section>
 
       {me && <>
         <TelegramConnect playerId={me.id} initiallyConnected={me.telegramConnected} />

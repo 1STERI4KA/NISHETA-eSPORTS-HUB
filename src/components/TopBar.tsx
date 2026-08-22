@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight, Gamepad2, UsersRound } from "lucide-react";
+import SteamLoginButton from "@/components/SteamLoginButton";
 
 export default function TopBar() {
   return (
@@ -15,6 +16,7 @@ export default function TopBar() {
       </div>
 
       <div className="ml-6 flex items-center gap-2">
+        <SteamLoginButton next="/play" compact />
         <Link href="/play" className="button-primary h-10 px-3.5">
           <Gamepad2 className="mr-1.5" size={15} strokeWidth={2} />
           Собрать катку

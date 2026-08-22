@@ -64,6 +64,14 @@ export default function DashboardPlayerWidgets({
 
   useEffect(() => {
     setPlayerId(localStorage.getItem(STORAGE_KEY) ?? "");
+    void fetch("/api/auth/steam/me", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((identity: { player?: { id?: string } | null } | null) => {
+        if (!identity?.player?.id) return;
+        localStorage.setItem(STORAGE_KEY, identity.player.id);
+        setPlayerId(identity.player.id);
+      })
+      .catch(() => undefined);
   }, []);
 
   const me = players.find((p) => p.id === playerId);
