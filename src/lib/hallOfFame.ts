@@ -22,6 +22,8 @@ export interface RecordEntry {
 }
 
 export function computeSingleGameRecords(rows: RecordRow[]) {
+  // Old OpenDota rows can contain a default 0 GPM. A zero is missing telemetry here, not a real record.
+  const gpmRows = rows.filter((row) => row.gpm > 0);
   const fame: RecordEntry[] = [
     {
       title: "Лучший KDA за игру",
@@ -40,13 +42,13 @@ export function computeSingleGameRecords(rows: RecordRow[]) {
     },
     {
       title: "Лучший GPM за игру",
-      row: maxBy(rows, (r) => r.gpm),
+      row: maxBy(gpmRows, (r) => r.gpm),
       valueLabel: (r) => `${r.gpm} GPM`,
     },
   ];
 
   const shameCandidatesKda = rows.filter((r) => r.deaths >= 5);
-  const shameCandidatesGpm = rows.filter((r) => r.duration >= 1200); // от 20 минут
+  const shameCandidatesGpm = gpmRows.filter((r) => r.duration >= 1200); // от 20 минут и с валидной телеметрией
 
   const shame: RecordEntry[] = [
     {

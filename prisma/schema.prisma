@@ -20,6 +20,8 @@ model Player {
   secondaryRoles Role[]
   steamId     String?  @unique // Steam64 ID или временно vanity-имя до первой синхронизации
   bio         String?
+  availability String  @default("unknown") // unknown | today | evening | away
+  availabilityUpdatedAt DateTime?
   isActive    Boolean  @default(true)
 telegramChatId     String?   @unique
 telegramLinkCode   String?   @unique

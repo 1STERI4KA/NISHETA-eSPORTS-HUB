@@ -8,7 +8,6 @@ import {
   Gamepad2,
   Home,
   Menu,
-  Shield,
   Sparkles,
   Trophy,
   Users,
@@ -27,8 +26,7 @@ const navigation = [
     title: "Команда",
     links: [
       { href: "/players", label: "Игроки", icon: Users },
-      { href: "/dota2", label: "Dota 2", icon: Shield },
-      { href: "/dota2/stats", label: "Статистика", icon: BarChart3 },
+      { href: "/dota2/stats", label: "Dota 2 · аналитика", icon: BarChart3 },
       { href: "/nisheta", label: "NISHETA", icon: Trophy },
     ],
   },

@@ -42,6 +42,7 @@ async function notifyReady(gameCallId: string) {
           game: gameCall.game,
           creatorNickname: gameCall.creator.nickname,
           playersNeeded: gameCall.playersNeeded,
+          participants: gameCall.participants.map((participant) => participant.player.nickname),
           startTime: gameCall.startTime,
         })
       )
@@ -177,7 +178,7 @@ export async function completeGameCall(gameCallId: string, playerId: string) {
             id: gameCall.id,
             game: gameCall.game,
             creatorNickname: gameCall.creator.nickname,
-            participantCount: gameCall.participants.length,
+            participants: gameCall.participants.map((participant) => participant.player.nickname),
           })
         )
     );
@@ -204,6 +205,7 @@ export async function notifyGameCallCreated(gameCallId: string) {
         creatorNickname: gameCall.creator.nickname,
         playersNeeded: gameCall.playersNeeded,
         participantCount: gameCall.participants.length,
+        participants: gameCall.participants.map((participant) => participant.player.nickname),
         startTime: gameCall.startTime,
         note: gameCall.note,
       })

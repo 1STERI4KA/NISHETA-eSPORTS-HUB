@@ -10,7 +10,7 @@ export default async function PlayPage() {
   const playersRaw = await prisma.player.findMany({
     where: { isActive: true },
     orderBy: { nickname: "asc" },
-    select: { id: true, nickname: true, telegramChatId: true, realName: true, bio: true, mainRole: true },
+    select: { id: true, nickname: true, telegramChatId: true, realName: true, bio: true, mainRole: true, availability: true },
   });
   const players = playersRaw.map((player) => ({
     id: player.id,
@@ -18,6 +18,7 @@ export default async function PlayPage() {
     realName: player.realName,
     bio: player.bio,
     mainRole: player.mainRole,
+    availability: player.availability,
     telegramConnected: Boolean(player.telegramChatId),
   }));
 

@@ -57,6 +57,12 @@ function timeLine(startTime: Date) {
   return `через ${Math.round(minutes / 60)} ч`;
 }
 
+function participantLine(participants: string[]) {
+  if (participants.length === 0) return "Пока только организатор";
+  const visible = participants.slice(0, 8).join(", ");
+  return participants.length > 8 ? `${visible} и ещё ${participants.length - 8}` : visible;
+}
+
 function gameCallButtons(gameCallId: string): InlineButton[][] {
   return [
     [
@@ -69,7 +75,7 @@ function gameCallButtons(gameCallId: string): InlineButton[][] {
 
 export async function sendGameCallNotification(
   chatId: string,
-  gameCall: { id: string; game: string; creatorNickname: string; playersNeeded: number; participantCount: number; startTime: Date; note?: string | null }
+  gameCall: { id: string; game: string; creatorNickname: string; playersNeeded: number; participantCount: number; participants: string[]; startTime: Date; note?: string | null }
 ) {
   const text = [
     "NISHETA GAME CALL",
@@ -77,6 +83,7 @@ export async function sendGameCallNotification(
     `${gameLabels[gameCall.game] ?? gameCall.game} · ${gameCall.creatorNickname} собирает катку`,
     `Старт: ${timeLine(gameCall.startTime)}`,
     `Состав: ${gameCall.participantCount}/${gameCall.playersNeeded}`,
+    `Сейчас в деле: ${participantLine(gameCall.participants)}`,
     gameCall.note ? `Заметка: ${gameCall.note}` : null,
   ].filter(Boolean).join("\n");
 
@@ -85,18 +92,19 @@ export async function sendGameCallNotification(
 
 export async function sendGameCallReadyNotification(
   chatId: string,
-  gameCall: { id: string; game: string; creatorNickname: string; playersNeeded: number; startTime: Date }
+  gameCall: { id: string; game: string; creatorNickname: string; playersNeeded: number; participants: string[]; startTime: Date }
 ) {
   const text = [
     "СОСТАВ ГОТОВ",
     "",
     `${gameLabels[gameCall.game] ?? gameCall.game} · сбор ${gameCall.creatorNickname}`,
     `${gameCall.playersNeeded}/${gameCall.playersNeeded} игроков подтвердили участие.`,
+    `В деле: ${participantLine(gameCall.participants)}`,
     `Старт: ${timeLine(gameCall.startTime)}`,
-    "Открой Game Call, чтобы свериться с составом.",
+    "Сверьтесь с составом и можно запускаться.",
   ].join("\n");
 
-  return sendMessage(chatId, text, [[{ text: "Открыть Game Call", url: `${APP_URL}/play` }]]);
+  return sendMessage(chatId, text, [[{ text: "Открыть состав", url: `${APP_URL}/play` }]]);
 }
 
 export async function sendGameCallCancelledNotification(
@@ -105,13 +113,13 @@ export async function sendGameCallCancelledNotification(
 ) {
   return sendMessage(
     chatId,
-    `Сбор отменён\n\n${gameLabels[gameCall.game] ?? gameCall.game} · ${gameCall.creatorNickname} отменил(а) Game Call. Следующий сбор появится в этом же боте.`
+    `Сбор не состоялся\n\n${gameLabels[gameCall.game] ?? gameCall.game} · ${gameCall.creatorNickname} закрыл(а) Game Call. Следующий сбор появится в этом же боте.`
   );
 }
 
 export async function sendGameCallCompletedNotification(
   chatId: string,
-  gameCall: { id: string; game: string; creatorNickname: string; participantCount: number }
+  gameCall: { id: string; game: string; creatorNickname: string; participants: string[] }
 ) {
   return sendMessage(
     chatId,
@@ -119,8 +127,8 @@ export async function sendGameCallCompletedNotification(
       "ИГРА СОСТОЯЛАСЬ",
       "",
       `${gameLabels[gameCall.game] ?? gameCall.game} · сбор ${gameCall.creatorNickname}`,
-      `В сборе отметились: ${gameCall.participantCount}.`,
-      "Спасибо за игру. История сборов уже появилась в NISHETA.",
+      `В сборе были: ${participantLine(gameCall.participants)}.`,
+      "Спасибо за игру. Статистика и история уже ждут в хабе.",
     ].join("\n"),
     [[{ text: "Открыть историю", url: `${APP_URL}/play` }]]
   );
