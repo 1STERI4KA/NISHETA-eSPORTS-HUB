@@ -22,6 +22,11 @@ model Player {
   bio         String?
   availability String  @default("unknown") // unknown | today | evening | away
   availabilityUpdatedAt DateTime?
+  notifyDota Boolean @default(true)
+  notifyCs2 Boolean @default(true)
+  notifyNeedOne Boolean @default(true)
+  notifyRecaps Boolean @default(true)
+  notificationWindow String @default("any") // any | evening
   isActive    Boolean  @default(true)
 telegramChatId     String?   @unique
 telegramLinkCode   String?   @unique
@@ -42,6 +47,8 @@ model GameCall {
   startTime     DateTime
   note          String?
   status        String   @default("waiting") // waiting | ready | cancelled | expired
+  recapMatchId  String?
+  completedAt   DateTime?
   createdAt     DateTime @default(now())
   participants  GameCallPlayer[]
 }

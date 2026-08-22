@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Clock3, Gamepad2, Plus, Sparkles, UsersRound, X } from "lucide-react";
+import { CalendarDays, ChevronDown, Clock3, Copy, Gamepad2, Link2, Plus, Sparkles, UserPlus, UsersRound, X } from "lucide-react";
 import TelegramConnect from "@/components/TelegramConnect";
 import ProfileSetup from "@/components/ProfileSetup";
 
@@ -18,6 +18,11 @@ interface Player {
   bio: string | null;
   mainRole: string | null;
   availability: string;
+  notifyDota: boolean;
+  notifyCs2: boolean;
+  notifyNeedOne: boolean;
+  notifyRecaps: boolean;
+  notificationWindow: string;
 }
 interface GameCallPlayerRef { id: string; nickname: string; }
 interface Participant { id: string; player: GameCallPlayerRef; }
@@ -32,6 +37,7 @@ interface GameCall {
   status: string;
   createdAt: string;
   participants: Participant[];
+  recap?: { matchId: string | null; outcome: "win" | "loss" | "mixed" | "unknown"; mvp: { nickname: string; heroName: string; kda: number; kills: number; deaths: number; assists: number } | null; topKills: { nickname: string; heroName: string; kills: number } | null; note: string } | null;
 }
 
 type QuickCall = {
@@ -144,6 +150,7 @@ export default function PlayClient({ players, gameCalls, recentGameCalls }: { pl
   const [loading, setLoading] = useState(false);
   const [quickCreating, setQuickCreating] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [copiedCallId, setCopiedCallId] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -159,6 +166,41 @@ export default function PlayClient({ players, gameCalls, recentGameCalls }: { pl
   const activeCalls = gameCalls.filter((gameCall) => gameCall.status === "waiting" || gameCall.status === "ready");
   const availablePlayers = players.filter((player) => player.availability === "today" || player.availability === "evening");
   const myAvailability = me ? availabilityInfo(me.availability) : null;
+  const upcomingCalls = [...activeCalls].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+  async function copyCallLink(callId: string) {
+    const link = `${window.location.origin}/play?call=${callId}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedCallId(callId);
+      window.setTimeout(() => setCopiedCallId((current) => current === callId ? null : current), 1800);
+    } catch {
+      setActionError("Не удалось скопировать ссылку — скопируй адрес страницы вручную");
+    }
+  }
+
+  function recapText(call: GameCall) {
+    const recap = call.recap;
+    if (!recap) return `${gameLabels[call.game] ?? call.game} · сбор ${call.creator.nickname} состоялся`;
+    const result = recap.outcome === "win" ? "Победа команды" : recap.outcome === "loss" ? "Поражение команды" : recap.outcome === "mixed" ? "Составы сыграли по разные стороны" : "Матч ждёт синхронизации";
+    return [
+      "NISHETA · ИТОГ КАТКИ",
+      `${gameLabels[call.game] ?? call.game} · сбор ${call.creator.nickname}`,
+      result,
+      recap.mvp ? `MVP: ${recap.mvp.nickname} · ${recap.mvp.heroName} · ${recap.mvp.kills}/${recap.mvp.deaths}/${recap.mvp.assists}` : null,
+      recap.topKills ? `Больше всего килов: ${recap.topKills.nickname} · ${recap.topKills.kills}` : null,
+    ].filter(Boolean).join("\n");
+  }
+
+  async function copyRecap(call: GameCall) {
+    try {
+      await navigator.clipboard.writeText(recapText(call));
+      setCopiedCallId(call.id);
+      window.setTimeout(() => setCopiedCallId((current) => current === call.id ? null : current), 1800);
+    } catch {
+      setActionError("Не удалось скопировать итог — скопируй текст вручную");
+    }
+  }
 
   async function act(url: string, body: Record<string, unknown>) {
     setLoading(true);
@@ -246,6 +288,8 @@ export default function PlayClient({ players, gameCalls, recentGameCalls }: { pl
 
       {showForm && me && <CreateForm key={`${formPreset?.id ?? "custom"}-${me.id}`} creatorId={me.id} preset={formPreset} onCancel={() => { setShowForm(false); setFormPreset(undefined); }} onCreated={() => { setShowForm(false); setFormPreset(undefined); router.refresh(); }} />}
 
+      {upcomingCalls.length > 0 && <section className="surface overflow-hidden"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-5 py-4 sm:px-6"><div><p className="data-label">Ближайшие сборы</p><p className="mt-1 text-sm font-semibold text-graphite">Не потеряйте следующую катку</p></div><CalendarDays size={18} className="text-graphite-muted" /></div><div className="grid divide-y divide-hairline sm:grid-cols-2 sm:divide-x sm:divide-y-0">{upcomingCalls.slice(0, 4).map((call) => { const missing = Math.max(0, call.playersNeeded - call.participants.length); return <div key={call.id} className="flex items-center justify-between gap-3 px-5 py-4"><div><p className="text-xs font-semibold text-graphite">{gameLabels[call.game] ?? call.game} · {timeLabel(call.startTime)}</p><p className="mt-1 text-xs text-graphite-muted">{call.creator.nickname} · {call.participants.length}/{call.playersNeeded} в составе</p></div>{missing === 1 ? <span className="rounded-full bg-[#fff8ed] px-2 py-1 text-[10px] font-semibold text-[#90682f]">нужен 1</span> : <span className="rounded-full bg-paper-muted px-2 py-1 text-[10px] font-semibold text-graphite-muted">ещё {missing}</span>}</div>})}</div></section>}
+
       <section>
         <div className="mb-4 flex items-end justify-between gap-4"><div><p className="data-label">Game Calls</p><h1 className="mt-1 text-2xl font-semibold tracking-[-0.05em] text-graphite sm:text-3xl">Собираем своих</h1><p className="mt-1 text-xs text-graphite-muted">Неважно, двое вас или вся компания — просто отметьтесь, кто в деле.</p></div><span className="rounded-full bg-paper px-2.5 py-1 text-[10px] font-semibold text-graphite-muted">{activeCalls.length} активных</span></div>
         {activeCalls.length === 0 ? (
@@ -254,12 +298,14 @@ export default function PlayClient({ players, gameCalls, recentGameCalls }: { pl
           <div className="grid gap-4 lg:grid-cols-2">{activeCalls.map((call) => {
             const joined = call.participants.some((participant) => participant.player.id === playerId);
             const isFull = call.participants.length >= call.playersNeeded;
-            return <article key={call.id} className="surface p-5 sm:p-6"><div className="flex items-start justify-between gap-4"><div><span className="inline-flex rounded-full bg-[#fbedeb] px-2.5 py-1 text-[10px] font-semibold text-[#c23c2a]">{gameLabels[call.game] ?? call.game}</span><h2 className="mt-3 text-xl font-semibold tracking-[-0.045em] text-graphite">{call.creator.nickname} собирает катку</h2><p className="mt-1 flex items-center gap-1.5 text-xs text-graphite-muted"><Clock3 size={13} />Старт {timeLabel(call.startTime)}</p></div><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${call.status === "ready" ? "bg-[#eff8f2] text-accent-success" : "bg-paper-muted text-graphite-muted"}`}>{statusLabels[call.status]}</span></div>{call.note && <p className="mt-4 rounded-xl bg-paper-muted/70 px-3 py-2 text-xs leading-5 text-graphite-muted">{call.note}</p>}<div className="mt-5 flex items-center justify-between gap-3"><div className="flex -space-x-1.5">{call.participants.map((participant) => <div key={participant.id} title={participant.player.nickname} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-paper bg-paper-muted text-[10px] font-semibold text-graphite">{participant.player.nickname.slice(0, 1).toUpperCase()}</div>)}</div><span className="text-xs font-semibold text-graphite-muted">{call.participants.length} / {call.playersNeeded} игроков</span></div><div className="mt-6 flex flex-wrap gap-2">{me && (joined ? <button onClick={() => act(`/api/gamecalls/${call.id}/leave`, { playerId: me.id })} disabled={loading} className="button-secondary">Не иду</button> : <button onClick={() => act(`/api/gamecalls/${call.id}/join`, { playerId: me.id })} disabled={loading || isFull} className="button-primary">{isFull ? "Состав заполнен" : "Я иду"}</button>)}{me && me.id === call.creatorId && <button onClick={() => act(`/api/gamecalls/${call.id}/complete`, { playerId: me.id })} disabled={loading} className="button-secondary">Игра состоялась</button>}{me && me.id === call.creatorId && <button onClick={() => act(`/api/gamecalls/${call.id}/cancel`, { playerId: me.id })} disabled={loading} className="button-quiet text-accent-danger hover:bg-[#fdf1ef] hover:text-accent-danger">Отменить</button>}</div></article>;
+            const missing = Math.max(0, call.playersNeeded - call.participants.length);
+            const needsOne = call.status === "waiting" && missing === 1;
+            return <article key={call.id} className={`surface p-5 sm:p-6 ${needsOne ? "ring-1 ring-[#eadac0]" : ""}`}><div className="flex items-start justify-between gap-4"><div><span className="inline-flex rounded-full bg-[#fbedeb] px-2.5 py-1 text-[10px] font-semibold text-[#c23c2a]">{gameLabels[call.game] ?? call.game}</span><h2 className="mt-3 text-xl font-semibold tracking-[-0.045em] text-graphite">{call.creator.nickname} собирает катку</h2><p className="mt-1 flex items-center gap-1.5 text-xs text-graphite-muted"><Clock3 size={13} />Старт {timeLabel(call.startTime)}</p></div><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${call.status === "ready" ? "bg-[#eff8f2] text-accent-success" : "bg-paper-muted text-graphite-muted"}`}>{statusLabels[call.status]}</span></div>{needsOne && <div className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[#fff8ed] px-2.5 py-2 text-[10px] font-semibold text-[#90682f]"><UserPlus size={13} />Нужен ещё один</div>}{call.note && <p className="mt-4 rounded-xl bg-paper-muted/70 px-3 py-2 text-xs leading-5 text-graphite-muted">{call.note}</p>}<div className="mt-5 flex items-center justify-between gap-3"><div className="flex -space-x-1.5">{call.participants.map((participant) => <div key={participant.id} title={participant.player.nickname} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-paper bg-paper-muted text-[10px] font-semibold text-graphite">{participant.player.nickname.slice(0, 1).toUpperCase()}</div>)}</div><span className="text-xs font-semibold text-graphite-muted">{call.participants.length} / {call.playersNeeded} игроков</span></div><div className="mt-6 flex flex-wrap gap-2">{me && (joined ? <button onClick={() => act(`/api/gamecalls/${call.id}/leave`, { playerId: me.id })} disabled={loading} className="button-secondary">Не иду</button> : <button onClick={() => act(`/api/gamecalls/${call.id}/join`, { playerId: me.id })} disabled={loading || isFull} className="button-primary">{isFull ? "Состав заполнен" : needsOne ? "Закрыть состав" : "Я иду"}</button>)}<button onClick={() => copyCallLink(call.id)} className="button-quiet"><Link2 className="mr-1" size={14} />{copiedCallId === call.id ? "Скопировано" : "Позвать"}</button>{me && me.id === call.creatorId && <button onClick={() => act(`/api/gamecalls/${call.id}/complete`, { playerId: me.id })} disabled={loading} className="button-secondary">Игра состоялась</button>}{me && me.id === call.creatorId && <button onClick={() => act(`/api/gamecalls/${call.id}/cancel`, { playerId: me.id })} disabled={loading} className="button-quiet text-accent-danger hover:bg-[#fdf1ef] hover:text-accent-danger">Отменить</button>}</div></article>;
           })}</div>
         )}
       </section>
 
-      {recentGameCalls.length > 0 && <section className="surface overflow-hidden"><div className="border-b border-hairline px-5 py-4"><p className="data-label">Последние сборы</p><p className="mt-1 text-sm font-semibold text-graphite">Что реально произошло</p></div><div className="divide-y divide-hairline">{recentGameCalls.map((call) => <div key={call.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"><div><p className="text-sm font-semibold text-graphite">{gameLabels[call.game] ?? call.game} · {call.creator.nickname}</p><p className="mt-1 text-xs text-graphite-muted">{new Date(call.startTime).toLocaleString("ru-RU")} · {call.participants.length} отметились</p></div><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${call.status === "completed" ? "bg-[#eff8f2] text-accent-success" : "bg-paper-muted text-graphite-muted"}`}>{call.status === "completed" ? "Игра состоялась" : call.status === "cancelled" ? "Не состоялся" : "Время вышло"}</span></div>)}</div></section>}
+      {recentGameCalls.length > 0 && <section className="surface overflow-hidden"><div className="border-b border-hairline px-5 py-4"><p className="data-label">Последние сборы</p><p className="mt-1 text-sm font-semibold text-graphite">Что реально произошло</p></div><div className="divide-y divide-hairline">{recentGameCalls.map((call) => { const recap = call.recap; const resultLabel = recap?.outcome === "win" ? "Победа команды" : recap?.outcome === "loss" ? "Поражение команды" : recap?.outcome === "mixed" ? "Разные составы" : "Матч ждёт синхронизации"; return <article key={call.id} className="px-5 py-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-semibold text-graphite">{gameLabels[call.game] ?? call.game} · {call.creator.nickname}</p><p className="mt-1 text-xs text-graphite-muted">{new Date(call.startTime).toLocaleString("ru-RU")} · {call.participants.length} отметились</p></div><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${call.status === "completed" ? "bg-[#eff8f2] text-accent-success" : "bg-paper-muted text-graphite-muted"}`}>{call.status === "completed" ? "Игра состоялась" : call.status === "cancelled" ? "Не состоялся" : "Время вышло"}</span></div>{call.status === "completed" && <div className="mt-4 rounded-2xl border border-[#eadac0] bg-[#fff8ed] p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="data-label text-[#90682f]">Итог катки</p><p className="mt-1 text-sm font-semibold text-graphite">{resultLabel}</p></div><button onClick={() => copyRecap(call)} className="button-quiet"><Copy className="mr-1" size={13} />{copiedCallId === call.id ? "Скопировано" : "Скопировать итог"}</button></div>{recap?.mvp ? <p className="mt-3 text-xs text-graphite"><strong>MVP:</strong> {recap.mvp.nickname} · {recap.mvp.heroName} · {recap.mvp.kills}/{recap.mvp.deaths}/{recap.mvp.assists} · {recap.mvp.kda} KDA</p> : <p className="mt-3 text-xs text-graphite-muted">{recap?.note ?? "Состав и факт катки сохранены."}</p>}{recap?.topKills && <p className="mt-1 text-xs text-graphite-muted">Больше всего килов: {recap.topKills.nickname} · {recap.topKills.kills}</p>}</div>}</article>; })}</div></section>}
       {actionError && <p className="rounded-xl bg-[#fdf1ef] px-3 py-2 text-xs font-medium text-accent-danger">{actionError}</p>}
     </div>
   );

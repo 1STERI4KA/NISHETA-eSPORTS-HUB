@@ -2,14 +2,16 @@ import Link from "next/link";
 import { BarChart3, Crown, Swords, UsersRound } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getNishetaGroupStats, getNishetaMatchIds } from "@/lib/nisheta-matches";
+import { getTeamPairInsights } from "@/lib/pair-insights";
 
 export const dynamic = "force-dynamic";
 
 export default async function Dota2StatsPage() {
-  const [teamStats, groupMatchIds, players] = await Promise.all([
+  const [teamStats, groupMatchIds, players, pairInsights] = await Promise.all([
     getNishetaGroupStats(),
     getNishetaMatchIds(),
     prisma.player.findMany({ where: { isActive: true }, orderBy: { nickname: "asc" } }),
+    getTeamPairInsights(),
   ]);
 
   const heroCounts = groupMatchIds.length
@@ -78,6 +80,8 @@ export default async function Dota2StatsPage() {
           <p className="mt-1 text-xs text-graphite-muted">по общим решённым матчам команды</p>
         </article>
       </section>
+
+      <section className="surface overflow-hidden"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-5 py-5 sm:px-6"><div className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-paper-muted text-graphite"><UsersRound size={17} strokeWidth={1.7} /></span><div><p className="data-label">Совместная игра</p><h2 className="mt-1 text-lg font-semibold tracking-[-0.04em] text-graphite">С кем получается лучше всего</h2></div></div><p className="max-w-sm text-xs leading-5 text-graphite-muted">Только матчи, где пара была в одной команде. Нужны минимум две общие игры.</p></div>{pairInsights.length === 0 ? <p className="px-6 py-8 text-sm text-graphite-muted">Пока недостаточно общих матчей для честной статистики пар.</p> : <div className="grid divide-y divide-hairline sm:grid-cols-3 sm:divide-x sm:divide-y-0">{pairInsights.slice(0, 3).map((pair, index) => <article key={`${pair.first.id}-${pair.second.id}`} className="px-5 py-5 sm:px-6"><p className="data-label">{index === 0 ? "Лучшая связка" : `Место ${index + 1}`}</p><p className="mt-3 text-sm font-semibold text-graphite"><Link className="hover:underline" href={`/players/${pair.first.slug}`}>{pair.first.nickname}</Link> + <Link className="hover:underline" href={`/players/${pair.second.slug}`}>{pair.second.nickname}</Link></p><p className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-graphite">{pair.winrate}%</p><p className="mt-1 text-xs text-graphite-muted">{pair.wins}/{pair.losses} за {pair.games} общих игр</p></article>)}</div>}</section>
 
       <section className="grid gap-5 xl:grid-cols-12">
         <article className="surface p-6 xl:col-span-4">

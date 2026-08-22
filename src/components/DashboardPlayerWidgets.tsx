@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, Gamepad2, UserRound } from "lucide-react";
+import { ArrowUpRight, Gamepad2, Link2, UserPlus, UserRound } from "lucide-react";
 import AvatarInitials from "@/components/AvatarInitials";
 
 const STORAGE_KEY = "nisheta_player_id";
@@ -59,6 +59,7 @@ export default function DashboardPlayerWidgets({
 }) {
   const [playerId, setPlayerId] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -68,6 +69,19 @@ export default function DashboardPlayerWidgets({
   const me = players.find((p) => p.id === playerId);
   const myStats = me ? playerStats[me.id] : null;
   const joined = activeGameCall && me ? activeGameCall.participants.some((p) => p.player.id === me.id) : false;
+  const missing = activeGameCall ? Math.max(0, activeGameCall.playersNeeded - activeGameCall.participants.length) : 0;
+  const needsOne = activeGameCall?.status === "waiting" && missing === 1;
+
+  async function copyCallLink() {
+    if (!activeGameCall) return;
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/play?call=${activeGameCall.id}`);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   async function act(url: string) {
     if (!me) return;
@@ -108,11 +122,12 @@ export default function DashboardPlayerWidgets({
               <div>
                 <span className="inline-flex rounded-full bg-[#fbedeb] px-2.5 py-1 text-[10px] font-semibold text-[#c23c2a]">{gameLabels[activeGameCall.game] ?? activeGameCall.game}</span>
                 <h3 className="mt-3 text-xl font-semibold tracking-[-0.045em] text-graphite">Сбор {activeGameCall.creator.nickname}</h3>
-                <p className="mt-1 text-xs text-graphite-muted">Старт {timeLabel(activeGameCall.startTime)} · {activeGameCall.status === "ready" ? "состав готов" : "ищем игроков"}</p>
+                <p className="mt-1 text-xs text-graphite-muted">Старт {timeLabel(activeGameCall.startTime)} · {activeGameCall.status === "ready" ? "состав готов" : needsOne ? "нужен ещё один" : "ищем игроков"}</p>
               </div>
               <span className="rounded-xl bg-paper-muted px-3 py-2 text-xs font-semibold text-graphite">{activeGameCall.participants.length} / {activeGameCall.playersNeeded}</span>
             </div>
 
+            {needsOne && <div className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[#fff8ed] px-2.5 py-2 text-[10px] font-semibold text-[#90682f]"><UserPlus size={13} />Нужен ещё один игрок</div>}
             <div className="mt-6 flex items-center gap-2">
               {activeGameCall.participants.slice(0, 6).map((p) => (
                 <div key={p.id} title={p.player.nickname} className="rounded-full border-2 border-paper shadow-sm">
@@ -122,6 +137,7 @@ export default function DashboardPlayerWidgets({
               {activeGameCall.participants.length === 0 && <p className="text-xs text-graphite-muted">Первый игрок ещё не присоединился.</p>}
             </div>
 
+            <div className="mt-6 flex flex-wrap gap-2">
             {me ? (
               <button
                 onClick={() => act(joined ? `/api/gamecalls/${activeGameCall.id}/leave` : `/api/gamecalls/${activeGameCall.id}/join`)}
@@ -131,8 +147,10 @@ export default function DashboardPlayerWidgets({
                 {loading ? "Обновляем..." : joined ? "Я не иду" : "Я иду"}
               </button>
             ) : (
-              <Link href="/play" className="button-secondary mt-6 w-full">Сначала выбери себя</Link>
+              <Link href="/play" className="button-secondary">Сначала выбери себя</Link>
             )}
+            <button onClick={copyCallLink} className="button-quiet"><Link2 className="mr-1" size={14} />{copied ? "Скопировано" : "Позвать"}</button>
+            </div>
           </div>
         )}
       </article>

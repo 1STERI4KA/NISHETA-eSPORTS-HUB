@@ -1,3 +1,5 @@
+import type { GameCallRecap } from "@/lib/gamecall-recap";
+
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://nisheta-e-sports-hub.vercel.app").replace(/\/$/, "");
 
@@ -63,13 +65,17 @@ function participantLine(participants: string[]) {
   return participants.length > 8 ? `${visible} и ещё ${participants.length - 8}` : visible;
 }
 
+function gameCallUrl(gameCallId: string) {
+  return `${APP_URL}/play?call=${gameCallId}`;
+}
+
 function gameCallButtons(gameCallId: string): InlineButton[][] {
   return [
     [
       { text: "Я иду", callback_data: `join_game:${gameCallId}` },
       { text: "Не иду", callback_data: `leave_game:${gameCallId}` },
     ],
-    [{ text: "Открыть Game Call", url: `${APP_URL}/play` }],
+    [{ text: "Открыть Game Call", url: gameCallUrl(gameCallId) }],
   ];
 }
 
@@ -90,6 +96,21 @@ export async function sendGameCallNotification(
   return sendMessage(chatId, text, gameCallButtons(gameCall.id));
 }
 
+export async function sendNeedOneNotification(
+  chatId: string,
+  gameCall: { id: string; game: string; creatorNickname: string; playersNeeded: number; participants: string[]; startTime: Date }
+) {
+  const text = [
+    "НУЖЕН ЕЩЁ ОДИН",
+    "",
+    `${gameLabels[gameCall.game] ?? gameCall.game} · ${gameCall.creatorNickname} почти собрал(а) катку`,
+    `${gameCall.participants.length}/${gameCall.playersNeeded} в составе — нужен всего один игрок.`,
+    `Старт: ${timeLine(gameCall.startTime)}`,
+    `В деле: ${participantLine(gameCall.participants)}`,
+  ].join("\n");
+  return sendMessage(chatId, text, gameCallButtons(gameCall.id));
+}
+
 export async function sendGameCallReadyNotification(
   chatId: string,
   gameCall: { id: string; game: string; creatorNickname: string; playersNeeded: number; participants: string[]; startTime: Date }
@@ -104,7 +125,7 @@ export async function sendGameCallReadyNotification(
     "Сверьтесь с составом и можно запускаться.",
   ].join("\n");
 
-  return sendMessage(chatId, text, [[{ text: "Открыть состав", url: `${APP_URL}/play` }]]);
+  return sendMessage(chatId, text, [[{ text: "Открыть состав", url: gameCallUrl(gameCall.id) }]]);
 }
 
 export async function sendGameCallCancelledNotification(
@@ -117,9 +138,20 @@ export async function sendGameCallCancelledNotification(
   );
 }
 
+function recapLines(recap: GameCallRecap | null) {
+  if (!recap) return ["Итог сохранён: состав и факт катки есть в хабе."];
+  if (!recap.matchId) return ["Матч пока не сопоставлен — после синхронизации Dota итог обновится в хабе."];
+  const result = recap.outcome === "win" ? "Победа команды" : recap.outcome === "loss" ? "Поражение команды" : "Составы сыграли по разные стороны";
+  return [
+    `Результат: ${result}`,
+    recap.mvp ? `MVP: ${recap.mvp.nickname} · ${recap.mvp.heroName} · ${recap.mvp.kills}/${recap.mvp.deaths}/${recap.mvp.assists} (${recap.mvp.kda} KDA)` : null,
+    recap.topKills ? `Больше всего килов: ${recap.topKills.nickname} · ${recap.topKills.kills}` : null,
+  ].filter(Boolean);
+}
+
 export async function sendGameCallCompletedNotification(
   chatId: string,
-  gameCall: { id: string; game: string; creatorNickname: string; participants: string[] }
+  gameCall: { id: string; game: string; creatorNickname: string; participants: string[]; recap: GameCallRecap | null }
 ) {
   return sendMessage(
     chatId,
@@ -128,9 +160,10 @@ export async function sendGameCallCompletedNotification(
       "",
       `${gameLabels[gameCall.game] ?? gameCall.game} · сбор ${gameCall.creatorNickname}`,
       `В сборе были: ${participantLine(gameCall.participants)}.`,
-      "Спасибо за игру. Статистика и история уже ждут в хабе.",
+      "",
+      ...recapLines(gameCall.recap),
     ].join("\n"),
-    [[{ text: "Открыть историю", url: `${APP_URL}/play` }]]
+    [[{ text: "Открыть итог", url: gameCallUrl(gameCall.id) }]]
   );
 }
 
