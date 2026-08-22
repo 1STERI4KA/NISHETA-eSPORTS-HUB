@@ -8,7 +8,9 @@ export const dynamic = "force-dynamic";
 
 const playerSelect = {
   id: true,
+  slug: true,
   nickname: true,
+  avatarUrl: true,
   realName: true,
   bio: true,
   mainRole: true,

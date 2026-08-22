@@ -175,7 +175,12 @@ export default function PlayClient({ players, gameCalls, recentGameCalls }: { pl
       const response = await fetch("/api/auth/steam/me", { cache: "no-store" });
       const data = await response.json() as SteamIdentity;
       setSteam(data);
-      if (data.player) setPlayerId(data.player.id);
+      if (data.player) {
+        setPlayerId(data.player.id);
+      } else if (data.authenticated) {
+        localStorage.removeItem(STORAGE_KEY);
+        setPlayerIdState("");
+      }
     } catch {
       setSteam(null);
     } finally {
@@ -204,6 +209,8 @@ export default function PlayClient({ players, gameCalls, recentGameCalls }: { pl
 
   async function logoutSteam() {
     await fetch("/api/auth/steam/logout", { method: "POST" });
+    localStorage.removeItem(STORAGE_KEY);
+    setPlayerIdState("");
     setSteam({ authenticated: false, steamId: null, player: null });
     setSteamError(null);
   }
@@ -212,6 +219,7 @@ export default function PlayClient({ players, gameCalls, recentGameCalls }: { pl
   const activeCalls = gameCalls.filter((gameCall) => gameCall.status === "waiting" || gameCall.status === "ready");
   const availablePlayers = players.filter((player) => player.availability === "today" || player.availability === "evening");
   const myAvailability = me ? availabilityInfo(me.availability) : null;
+  const steamOwnsIdentity = Boolean(steam?.authenticated);
   const upcomingCalls = [...activeCalls].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
   async function copyCallLink(callId: string) {
@@ -305,10 +313,10 @@ export default function PlayClient({ players, gameCalls, recentGameCalls }: { pl
       <section className="surface flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-paper-muted text-graphite"><UsersRound size={20} strokeWidth={1.65} /></span>
-          <div>{me ? <><p className="data-label">Ты в хабе как</p><div className="mt-1 flex flex-wrap items-center gap-2"><p className="text-sm font-semibold text-graphite">{me.nickname}</p><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${myAvailability?.className}`}>{myAvailability?.label}</span></div></> : <><p className="data-label">Перед началом</p><p className="mt-1 text-sm font-semibold text-graphite">Выбери себя — это займёт один раз</p></>}</div>
+          <div>{me ? <><p className="data-label">Ты в хабе как</p><div className="mt-1 flex flex-wrap items-center gap-2"><p className="text-sm font-semibold text-graphite">{me.nickname}</p>{steamOwnsIdentity && <span className="rounded-full bg-[#eff8f2] px-2 py-0.5 text-[10px] font-semibold text-accent-success">Steam</span>}<span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${myAvailability?.className}`}>{myAvailability?.label}</span></div></> : <><p className="data-label">Перед началом</p><p className="mt-1 text-sm font-semibold text-graphite">{steamOwnsIdentity ? "Привяжи Steam к своему профилю ниже" : "Выбери себя — это займёт один раз"}</p></>}</div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {me ? <button onClick={() => setPlayerId("")} className="button-secondary">Сменить игрока</button> : <div className="relative"><select onChange={(event) => setPlayerId(event.target.value)} defaultValue="" className="h-10 appearance-none rounded-xl border border-hairline bg-paper px-3 pr-9 text-xs font-semibold text-graphite outline-none"><option value="" disabled>Кто ты?</option>{players.map((player) => <option key={player.id} value={player.id}>{player.nickname}{player.availability === "today" ? " · сегодня" : player.availability === "evening" ? " · вечером" : ""}</option>)}</select><ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-graphite-muted" /></div>}
+          {!steamOwnsIdentity && (me ? <button onClick={() => setPlayerId("")} className="button-secondary">Сменить игрока</button> : <div className="relative"><select onChange={(event) => setPlayerId(event.target.value)} defaultValue="" className="h-10 appearance-none rounded-xl border border-hairline bg-paper px-3 pr-9 text-xs font-semibold text-graphite outline-none"><option value="" disabled>Кто ты?</option>{players.map((player) => <option key={player.id} value={player.id}>{player.nickname}{player.availability === "today" ? " · сегодня" : player.availability === "evening" ? " · вечером" : ""}</option>)}</select><ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-graphite-muted" /></div>)}
           {!showForm && <button onClick={() => openCustomForm()} disabled={!me} className="button-primary"><Plus className="mr-1.5" size={15} strokeWidth={2} />Другой сбор</button>}
         </div>
       </section>

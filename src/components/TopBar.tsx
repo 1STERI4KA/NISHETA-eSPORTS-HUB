@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ChevronRight, Gamepad2, UsersRound } from "lucide-react";
+import { Gamepad2, UsersRound } from "lucide-react";
 import SteamLoginButton from "@/components/SteamLoginButton";
+import SteamProfileButton from "@/components/SteamProfileButton";
 
 export default function TopBar() {
   return (
@@ -21,11 +22,7 @@ export default function TopBar() {
           <Gamepad2 className="mr-1.5" size={15} strokeWidth={2} />
           Собрать катку
         </Link>
-        <Link href="/players" className="group flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors hover:bg-paper">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-graphite text-[10px] font-semibold text-paper">N</span>
-          <span className="text-xs font-semibold text-graphite">NISHETA</span>
-          <ChevronRight size={14} strokeWidth={1.7} className="text-graphite-muted transition-transform group-hover:translate-x-0.5" />
-        </Link>
+        <SteamProfileButton />
       </div>
     </header>
   );
