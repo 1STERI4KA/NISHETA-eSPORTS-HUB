@@ -13,13 +13,11 @@
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
-    "@types/three": "0.160.0",
     "@vercel/blob": "^1.1.1",
     "lucide-react": "^0.383.0",
     "next": "14.2.35",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "three": "0.160.1"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
@@ -27,8 +25,8 @@
     "@types/react-dom": "^18.3.1",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
-    "prisma": "^5.20.0",
     "tailwindcss": "^3.4.13",
+    "prisma": "^5.20.0",
     "tsx": "^4.19.1",
     "typescript": "^5.6.2"
   }
