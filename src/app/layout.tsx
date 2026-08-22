@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Oswald } from "next/font/google";
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
+import FriendCursor from "@/components/FriendCursor";
 import "./globals.css";
 
 const display = Oswald({
@@ -33,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="ru" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>
+        <FriendCursor />
         <div className="min-h-screen md:flex">
           <Sidebar />
           <div className="flex min-w-0 flex-1 flex-col">
