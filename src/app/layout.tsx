@@ -35,6 +35,7 @@ export const metadata: Metadata = {
   applicationName: "NISHETA eSPORTS HUB",
   verification: {
     google: "6hdgKsqshj5oK4M7__gRCSuf05TX8grfllG537rsWeE",
+    yandex: "b82e99b9d5271661",
   },
   keywords: [
     "NISHETA eSPORTS HUB",

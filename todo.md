@@ -22,3 +22,4 @@
 - [x] Add generated robots.txt and sitemap.xml for public pages while excluding admin and private gameplay routes.
 - [x] Verify SEO output, TypeScript, production build, and commit the search-engine discoverability update.
 - [x] Add the user-provided Google Search Console verification meta tag and verify it in production.
+- [x] Add the user-provided Yandex Webmaster verification meta tag and verify it in production.
