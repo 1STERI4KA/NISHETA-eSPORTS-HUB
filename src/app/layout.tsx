@@ -33,6 +33,9 @@ export const metadata: Metadata = {
   description:
     "NISHETA eSPORTS HUB — игровой хаб команды: Dota 2 Draft Lab, мета, билды, статистика игроков, игровые сборы и командная галерея.",
   applicationName: "NISHETA eSPORTS HUB",
+  verification: {
+    google: "6hdgKsqshj5oK4M7__gRCSuf05TX8grfllG537rsWeE",
+  },
   keywords: [
     "NISHETA eSPORTS HUB",
     "NISHETA",

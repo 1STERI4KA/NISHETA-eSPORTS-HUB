@@ -6,8 +6,10 @@ import sitemap from "../src/app/sitemap";
 test("robots keeps private and service routes out of search crawlers", () => {
   const config = robots();
 
-  assert.equal(config.rules?.allow, "/");
-  assert.deepEqual(config.rules?.disallow, ["/admin/", "/api/", "/play", "/lobby"]);
+  const rules = Array.isArray(config.rules) ? config.rules[0] : config.rules;
+
+  assert.equal(rules?.allow, "/");
+  assert.deepEqual(rules?.disallow, ["/admin/", "/api/", "/play", "/lobby"]);
   assert.equal(config.sitemap, "https://nisheta-e-sports-hub.vercel.app/sitemap.xml");
 });
 

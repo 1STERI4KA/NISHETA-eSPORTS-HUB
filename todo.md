@@ -21,3 +21,4 @@
 - [x] Add indexable SEO metadata, canonical URL, Open Graph and Twitter card configuration.
 - [x] Add generated robots.txt and sitemap.xml for public pages while excluding admin and private gameplay routes.
 - [x] Verify SEO output, TypeScript, production build, and commit the search-engine discoverability update.
+- [x] Add the user-provided Google Search Console verification meta tag and verify it in production.
