@@ -44,7 +44,7 @@ interface GameCall {
 
 type QuickCall = {
   id: string;
-  game: "DOTA2" | "CS2";
+  game: "DOTA2";
   playersNeeded: number;
   minutes: number;
   title: string;
@@ -52,7 +52,7 @@ type QuickCall = {
   note: string;
 };
 
-const gameLabels: Record<string, string> = { DOTA2: "Dota 2", CS2: "CS2" };
+const gameLabels: Record<string, string> = { DOTA2: "Dota 2" };
 const statusLabels: Record<string, string> = { waiting: "Ждём игроков", ready: "Состав готов" };
 const availabilityMeta: Record<Availability, { label: string; className: string }> = {
   unknown: { label: "не отметил", className: "bg-paper-muted text-graphite-muted" },
@@ -63,7 +63,6 @@ const availabilityMeta: Record<Availability, { label: string; className: string 
 const quickCalls: QuickCall[] = [
   { id: "dota-now", game: "DOTA2", playersNeeded: 3, minutes: 0, title: "Dota сейчас", description: "Нужно до 3 игроков", note: "Быстрая катка прямо сейчас" },
   { id: "dota-30", game: "DOTA2", playersNeeded: 5, minutes: 30, title: "Dota через 30", description: "Собираем пати до 5", note: "Через 30 минут" },
-  { id: "cs2-evening", game: "CS2", playersNeeded: 4, minutes: 60, title: "CS2 через час", description: "Спокойный вечерний сбор", note: "Через час" },
 ];
 
 function availabilityInfo(availability: string) {
@@ -78,7 +77,7 @@ function timeLabel(startTime: string) {
 }
 
 function CreateForm({ creatorId, onCancel, onCreated, preset }: { creatorId: string; onCancel: () => void; onCreated: () => void; preset?: QuickCall }) {
-  const [game, setGame] = useState(preset?.game ?? "DOTA2");
+  const [game] = useState<"DOTA2">("DOTA2");
   const [playersNeeded, setPlayersNeeded] = useState(preset?.playersNeeded ?? 3);
   const [startOption, setStartOption] = useState<"now" | "30" | "60">(
     preset?.minutes === 0 ? "now" : preset?.minutes === 60 ? "60" : "30"
@@ -125,9 +124,7 @@ function CreateForm({ creatorId, onCancel, onCreated, preset }: { creatorId: str
         <div>
           <p className="data-label mb-2">Игра</p>
           <div className="flex gap-2">
-            {(["DOTA2", "CS2"] as const).map((item) => (
-              <button key={item} onClick={() => setGame(item)} className={`flex-1 rounded-xl border px-3 py-3 text-xs font-semibold transition ${game === item ? "border-graphite bg-graphite text-paper" : "border-hairline bg-paper text-graphite-muted hover:bg-paper-muted"}`}>{gameLabels[item]}</button>
-            ))}
+            <div className="flex items-center gap-2 rounded-xl border border-graphite bg-graphite px-3 py-3 text-xs font-semibold text-paper"><Gamepad2 size={15}/> {gameLabels[game]}</div>
           </div>
         </div>
         <div>

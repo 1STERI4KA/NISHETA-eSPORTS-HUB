@@ -4,7 +4,6 @@ const primaryLinks = [
   { href: "/", label: "Дашборд" },
   { href: "/play", label: "Играть" },
   { href: "/dota2", label: "Dota 2" },
-  { href: "/cs2", label: "CS2" },
   { href: "/nisheta", label: "NISHETA" },
   { href: "/players", label: "Игроки" },
 ];

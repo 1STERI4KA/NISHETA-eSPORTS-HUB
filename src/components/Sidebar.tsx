@@ -6,7 +6,6 @@ import { useState } from "react";
 import {
   BarChart3,
   Camera,
-  Crosshair,
   Gamepad2,
   Home,
   Menu,
@@ -32,7 +31,6 @@ const navigation = [
     links: [
       { href: "/players", label: "Игроки", icon: Users },
       { href: "/dota2/stats", label: "Dota 2 · аналитика", icon: BarChart3 },
-      { href: "/cs2", label: "CS2", icon: Crosshair },
       { href: "/gallery", label: "Фотогалерея", icon: Camera },
       { href: "/satire", label: "Сводки", icon: Sparkles },
       { href: "/nisheta", label: "NISHETA", icon: Trophy },

@@ -92,8 +92,8 @@ export default function HeroPortrait() {
           }}
         >
           <img
-            src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663910302802/FhsmsniYSEAIovGr.png"
-            alt="Портрет игрока NISHETA"
+            src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663910302802/qJJpiSCELOfbjefn.png"
+            alt="Командная фотография NISHETA"
             className="h-full w-full select-none object-cover object-[50%_34%] opacity-95 [filter:drop-shadow(0_22px_28px_rgba(0,0,0,0.35))]"
             draggable={false}
           />

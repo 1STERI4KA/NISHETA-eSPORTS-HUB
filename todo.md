@@ -14,3 +14,7 @@
 - [x] Add the requested homepage photo caption and verify all affected routes before pushing the update.
 - [x] Remove stale `.next` route types after retiring gallery upload handlers.
 - [x] Fix readonly gallery asset typing and satire template selector state before the final build.
+- [x] Replace the homepage hero image with the newly supplied NISHETA team photo.
+- [x] Remove the CS2 route and all CS2 navigation/entry links without affecting Dota and lobby routes.
+- [x] Verify the homepage, navigation, gallery, and production build before pushing the update.
+- [x] Remove stale `.next` CS2 route types after deleting the CS2 page.
