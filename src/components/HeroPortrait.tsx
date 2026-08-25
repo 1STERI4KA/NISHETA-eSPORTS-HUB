@@ -92,7 +92,7 @@ export default function HeroPortrait() {
           }}
         >
           <img
-            src="/hero-current-friend.jpg"
+            src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663910302802/FhsmsniYSEAIovGr.png"
             alt="Портрет игрока NISHETA"
             className="h-full w-full select-none object-cover object-[50%_34%] opacity-95 [filter:drop-shadow(0_22px_28px_rgba(0,0,0,0.35))]"
             draggable={false}
@@ -110,7 +110,7 @@ export default function HeroPortrait() {
             Свой игровой хаб для быстрых сборов, живой команды и честной статистики.
           </p>
           <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#e5b46d]/90">
-            Только его лицо. Без чужого аватара.
+            Ебля до пота вокруг банки компота
           </p>
         </div>
 
