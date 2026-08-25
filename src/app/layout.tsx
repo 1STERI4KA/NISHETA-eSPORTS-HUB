@@ -21,16 +21,70 @@ const mono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
+const siteUrl = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://nisheta-e-sports-hub.vercel.app");
+const socialImage = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663910302802/qJJpiSCELOfbjefn.png";
+
 export const metadata: Metadata = {
-  title: "NISHETA eSPORTS HUB",
-  description: "Приватный игровой хаб команды NISHETA",
+  metadataBase: siteUrl,
+  title: {
+    default: "NISHETA eSPORTS HUB — игровой хаб команды",
+    template: "%s | NISHETA eSPORTS HUB",
+  },
+  description:
+    "NISHETA eSPORTS HUB — игровой хаб команды: Dota 2 Draft Lab, мета, билды, статистика игроков, игровые сборы и командная галерея.",
+  applicationName: "NISHETA eSPORTS HUB",
+  keywords: [
+    "NISHETA eSPORTS HUB",
+    "NISHETA",
+    "Dota 2",
+    "Dota 2 Draft Lab",
+    "мета Dota 2",
+    "статистика игроков",
+    "киберспорт",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    url: siteUrl,
+    siteName: "NISHETA eSPORTS HUB",
+    title: "NISHETA eSPORTS HUB — игровой хаб команды",
+    description:
+      "Dota 2 Draft Lab, мета, билды, статистика игроков и командная галерея NISHETA.",
+    images: [
+      {
+        url: socialImage,
+        alt: "Командная фотография NISHETA eSPORTS HUB",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "NISHETA eSPORTS HUB — игровой хаб команды",
+    description:
+      "Dota 2 Draft Lab, мета, билды, статистика игроков и командная галерея NISHETA.",
+    images: [socialImage],
+  },
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="ru" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>

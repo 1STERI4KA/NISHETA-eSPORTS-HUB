@@ -18,3 +18,6 @@
 - [x] Remove the CS2 route and all CS2 navigation/entry links without affecting Dota and lobby routes.
 - [x] Verify the homepage, navigation, gallery, and production build before pushing the update.
 - [x] Remove stale `.next` CS2 route types after deleting the CS2 page.
+- [x] Add indexable SEO metadata, canonical URL, Open Graph and Twitter card configuration.
+- [x] Add generated robots.txt and sitemap.xml for public pages while excluding admin and private gameplay routes.
+- [x] Verify SEO output, TypeScript, production build, and commit the search-engine discoverability update.
