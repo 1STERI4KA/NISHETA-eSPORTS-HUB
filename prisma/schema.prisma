@@ -114,6 +114,105 @@ model MatchPlayer {
   @@unique([matchId, playerId])
 }
 
+model DraftSession {
+  id          String        @id @default(cuid())
+  title       String
+  status      String        @default("active") // active | completed | archived
+  activeSide  String        @default("radiant") // radiant | dire
+  turnNumber  Int           @default(1)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  actions     DraftAction[]
+}
+
+model DraftAction {
+  id          String       @id @default(cuid())
+  sessionId   String
+  session     DraftSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  actionType  String       // pick | ban
+  side        String       // radiant | dire
+  heroId      Int
+  heroName    String
+  role        String?
+  turnNumber  Int
+  createdAt   DateTime     @default(now())
+
+  @@index([sessionId, turnNumber])
+}
+
+model CsProfile {
+  id                String          @id @default(cuid())
+  playerId          String          @unique
+  faceitNickname    String?
+  faceitPlayerId    String?
+  connectionStatus  String          @default("unlinked") // unlinked | ready | synced | error
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  snapshots         CsStatSnapshot[]
+}
+
+model CsStatSnapshot {
+  id          String    @id @default(cuid())
+  profileId   String
+  profile     CsProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  matches     Int       @default(0)
+  wins        Int       @default(0)
+  kills       Int       @default(0)
+  deaths      Int       @default(0)
+  capturedAt  DateTime  @default(now())
+
+  @@index([profileId, capturedAt])
+}
+
+model GalleryAlbum {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  isPublished Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  photos      GalleryPhoto[]
+}
+
+model GalleryPhoto {
+  id          String            @id @default(cuid())
+  albumId     String
+  album       GalleryAlbum      @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  storageKey  String
+  imageUrl    String
+  caption     String?
+  status      String            @default("draft") // draft | published | rejected
+  createdAt   DateTime          @default(now())
+  publishedAt DateTime?
+  tags        GalleryPhotoTag[]
+
+  @@index([albumId, status])
+}
+
+model GalleryPhotoTag {
+  id        String       @id @default(cuid())
+  photoId   String
+  photo     GalleryPhoto @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  playerId  String
+
+  @@unique([photoId, playerId])
+}
+
+model SatirePost {
+  id          String    @id @default(cuid())
+  templateId  String
+  subjectName String
+  headline    String
+  body        String
+  status      String    @default("draft") // draft | published | rejected
+  reviewedAt  DateTime?
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, publishedAt])
+}
+
 enum Role {
   CARRY
   MID
