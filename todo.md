@@ -23,3 +23,9 @@
 - [x] Verify SEO output, TypeScript, production build, and commit the search-engine discoverability update.
 - [x] Add the user-provided Google Search Console verification meta tag and verify it in production.
 - [x] Add the user-provided Yandex Webmaster verification meta tag and verify it in production.
+- [x] Complete a mobile-first user audit of every public site section and document usability findings.
+- [ ] Evaluate and, if approved, implement a real NISHETA Elo power ranking with match-by-match history and profile chart.
+- [ ] Evaluate and, if approved, implement a moderated anonymous wall of recognitions and friendly teasing.
+- [x] Evaluate and, if approved, add deterministic one-line match headlines generated from verified match facts.
+- [x] Add deterministic one-line match headlines beside recent match results using verified match facts only.
+- [x] Add tests and verify the match headlines on the homepage and player profiles.

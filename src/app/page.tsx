@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatDuration, formatDate } from "@/lib/format";
 import { getNishetaGroupStats } from "@/lib/nisheta-matches";
 import { getNishetaWeekAwards } from "@/lib/nisheta-week";
+import { buildMatchHeadline } from "@/lib/match-headline";
 import SyncButton from "@/components/SyncButton";
 import NishetaThisWeek from "@/components/NishetaThisWeek";
 import DashboardPlayerWidgets from "@/components/DashboardPlayerWidgets";
@@ -34,10 +35,10 @@ export default async function DashboardPage() {
     ? { ...activeGameCallRaw, startTime: activeGameCallRaw.startTime.toISOString() }
     : null;
 
-  const recentMatchPlayers = await prisma.matchPlayer.findMany({
+  const recentMatches = await prisma.match.findMany({
     take: 6,
-    orderBy: { match: { startTime: "desc" } },
-    include: { match: true, player: true },
+    orderBy: { startTime: "desc" },
+    include: { players: { where: { playerId: { in: players.map((player) => player.id) } }, include: { player: true } } },
   });
 
   const storedMatchCount = await prisma.match.count();
@@ -138,21 +139,25 @@ export default async function DashboardPage() {
             </div>
             <Link href="/dota2/stats" className="button-quiet">Вся статистика <ArrowUpRight className="ml-1" size={14} /></Link>
           </div>
-          {recentMatchPlayers.length === 0 ? (
+          {recentMatches.length === 0 ? (
             <div className="rounded-2xl bg-paper-muted/70 px-4 py-8 text-center text-sm text-graphite-muted">Пока нет синхронизированных матчей.</div>
           ) : (
             <div className="divide-y divide-hairline">
-              {recentMatchPlayers.map((mp) => (
-                <div key={mp.id} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-graphite">{mp.player.nickname} <span className="font-normal text-graphite-muted">· {mp.heroName}</span></p>
-                    <p className="mt-0.5 text-[11px] text-graphite-muted">{formatDate(mp.match.startTime)} · {formatDuration(mp.match.duration)}</p>
+              {recentMatches.map((match) => {
+                const headline = buildMatchHeadline(match.players.map((row) => ({ nickname: row.player.nickname, heroName: row.heroName, win: row.win, kills: row.kills, deaths: row.deaths, assists: row.assists, gpm: row.gpm, duration: match.duration })));
+                const won = match.players.filter((row) => row.win).length > match.players.length / 2;
+                return (
+                  <div key={match.id} className="py-3.5 first:pt-0 last:pb-0">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold leading-5 text-graphite">{headline}</p>
+                        <p className="mt-1 text-[11px] text-graphite-muted">{formatDate(match.startTime)} · {formatDuration(match.duration)} · {match.players.length} игроков NISHETA</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${won ? "bg-[#eff8f2] text-accent-success" : "bg-[#fdf1ef] text-accent-danger"}`}>{won ? "Победа" : "Поражение"}</span>
+                    </div>
                   </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${mp.win ? "bg-[#eff8f2] text-accent-success" : "bg-[#fdf1ef] text-accent-danger"}`}>
-                    {mp.win ? "Победа" : "Поражение"}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </article>
