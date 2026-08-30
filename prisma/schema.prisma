@@ -11,45 +11,47 @@ datasource db {
 }
 
 model Player {
-  id          String   @id @default(cuid())
-  slug        String   @unique // используется в URL /players/[slug]
-  nickname    String
-  realName    String?
-  avatarUrl   String?
-  mainRole    Role?
-  secondaryRoles Role[]
-  steamId     String?  @unique // Steam64 ID или временно vanity-имя до первой синхронизации
-  bio         String?
-  availability String  @default("unknown") // unknown | today | evening | away
+  id                    String           @id @default(cuid())
+  slug                  String           @unique // используется в URL /players/[slug]
+  nickname              String
+  realName              String?
+  avatarUrl             String?
+  mainRole              Role?
+  secondaryRoles        Role[]
+  steamId               String?          @unique // Steam64 ID или временно vanity-имя до первой синхронизации
+  bio                   String?
+  availability          String           @default("unknown") // unknown | today | evening | away
   availabilityUpdatedAt DateTime?
-  notifyDota Boolean @default(true)
-  notifyCs2 Boolean @default(true)
-  notifyNeedOne Boolean @default(true)
-  notifyRecaps Boolean @default(true)
-  notificationWindow String @default("any") // any | evening
-  isActive    Boolean  @default(true)
-telegramChatId     String?   @unique
-telegramLinkCode   String?   @unique
-telegramLinkExpiry DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  matches     MatchPlayer[]
-  lobbyEntries LobbyPlayer[]
-gameCalls       GameCall[]
-gameCallEntries GameCallPlayer[]
+  notifyDota            Boolean          @default(true)
+  notifyCs2             Boolean          @default(true)
+  notifyNeedOne         Boolean          @default(true)
+  notifyRecaps          Boolean          @default(true)
+  notificationWindow    String           @default("any") // any | evening
+  isActive              Boolean          @default(true)
+  telegramChatId        String?          @unique
+  telegramLinkCode      String?          @unique
+  telegramLinkExpiry    DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  matches               MatchPlayer[]
+
+  lobbyEntries          LobbyPlayer[]
+  gameCalls             GameCall[]
+  gameCallEntries       GameCallPlayer[]
 }
+
 model GameCall {
-  id            String   @id @default(cuid())
-  game          String   // "DOTA2" | "CS2"
+  id            String           @id @default(cuid())
+  game          String // "DOTA2" | "CS2"
   creatorId     String
-  creator       Player   @relation(fields: [creatorId], references: [id])
+  creator       Player           @relation(fields: [creatorId], references: [id])
   playersNeeded Int
   startTime     DateTime
   note          String?
-  status        String   @default("waiting") // waiting | ready | cancelled | expired
+  status        String           @default("waiting") // waiting | ready | cancelled | expired
   recapMatchId  String?
   completedAt   DateTime?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime         @default(now())
   participants  GameCallPlayer[]
 }
 
@@ -63,6 +65,7 @@ model GameCallPlayer {
 
   @@unique([gameCallId, playerId])
 }
+
 model Lobby {
   id        String        @id @default(cuid())
   createdAt DateTime      @default(now())
@@ -71,15 +74,15 @@ model Lobby {
 }
 
 model LobbyPlayer {
-  id       String  @id @default(cuid())
-  lobbyId  String
-  lobby    Lobby   @relation(fields: [lobbyId], references: [id])
-  playerId String
-  player   Player  @relation(fields: [playerId], references: [id])
-  position Int?    // 1-5
- team       String?
-ready      Boolean @default(false)
-heroName String?
+  id         String  @id @default(cuid())
+  lobbyId    String
+  lobby      Lobby   @relation(fields: [lobbyId], references: [id])
+  playerId   String
+  player     Player  @relation(fields: [playerId], references: [id])
+  position   Int? // 1-5
+  team       String?
+  ready      Boolean @default(false)
+  heroName   String?
   buildItems String?
 
   @@unique([lobbyId, playerId])
@@ -88,18 +91,18 @@ heroName String?
 model Match {
   id         String        @id // Dota match_id как строка
   startTime  DateTime
-  duration   Int           // секунды
+  duration   Int // секунды
   radiantWin Boolean
   createdAt  DateTime      @default(now())
   players    MatchPlayer[]
 }
 
 model MatchPlayer {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   matchId   String
-  match     Match    @relation(fields: [matchId], references: [id])
+  match     Match   @relation(fields: [matchId], references: [id])
   playerId  String
-  player    Player   @relation(fields: [playerId], references: [id])
+  player    Player  @relation(fields: [playerId], references: [id])
   heroId    Int
   heroName  String
   isRadiant Boolean
@@ -115,51 +118,51 @@ model MatchPlayer {
 }
 
 model DraftSession {
-  id          String        @id @default(cuid())
-  title       String
-  status      String        @default("active") // active | completed | archived
-  activeSide  String        @default("radiant") // radiant | dire
-  turnNumber  Int           @default(1)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  actions     DraftAction[]
+  id         String        @id @default(cuid())
+  title      String
+  status     String        @default("active") // active | completed | archived
+  activeSide String        @default("radiant") // radiant | dire
+  turnNumber Int           @default(1)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  actions    DraftAction[]
 }
 
 model DraftAction {
-  id          String       @id @default(cuid())
-  sessionId   String
-  session     DraftSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  actionType  String       // pick | ban
-  side        String       // radiant | dire
-  heroId      Int
-  heroName    String
-  role        String?
-  turnNumber  Int
-  createdAt   DateTime     @default(now())
+  id         String       @id @default(cuid())
+  sessionId  String
+  session    DraftSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  actionType String // pick | ban
+  side       String // radiant | dire
+  heroId     Int
+  heroName   String
+  role       String?
+  turnNumber Int
+  createdAt  DateTime     @default(now())
 
   @@index([sessionId, turnNumber])
 }
 
 model CsProfile {
-  id                String          @id @default(cuid())
-  playerId          String          @unique
-  faceitNickname    String?
-  faceitPlayerId    String?
-  connectionStatus  String          @default("unlinked") // unlinked | ready | synced | error
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  snapshots         CsStatSnapshot[]
+  id               String           @id @default(cuid())
+  playerId         String           @unique
+  faceitNickname   String?
+  faceitPlayerId   String?
+  connectionStatus String           @default("unlinked") // unlinked | ready | synced | error
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  snapshots        CsStatSnapshot[]
 }
 
 model CsStatSnapshot {
-  id          String    @id @default(cuid())
-  profileId   String
-  profile     CsProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  matches     Int       @default(0)
-  wins        Int       @default(0)
-  kills       Int       @default(0)
-  deaths      Int       @default(0)
-  capturedAt  DateTime  @default(now())
+  id         String    @id @default(cuid())
+  profileId  String
+  profile    CsProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  matches    Int       @default(0)
+  wins       Int       @default(0)
+  kills      Int       @default(0)
+  deaths     Int       @default(0)
+  capturedAt DateTime  @default(now())
 
   @@index([profileId, capturedAt])
 }
@@ -190,13 +193,15 @@ model GalleryPhoto {
 }
 
 model GalleryPhotoTag {
-  id        String       @id @default(cuid())
-  photoId   String
-  photo     GalleryPhoto @relation(fields: [photoId], references: [id], onDelete: Cascade)
-  playerId  String
+  id       String       @id @default(cuid())
+  photoId  String
+  photo    GalleryPhoto @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  playerId String
 
   @@unique([photoId, playerId])
 }
+
+
 
 model SatirePost {
   id          String    @id @default(cuid())

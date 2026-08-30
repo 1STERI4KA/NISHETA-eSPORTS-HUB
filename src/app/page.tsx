@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatDuration, formatDate } from "@/lib/format";
 import { getNishetaGroupStats } from "@/lib/nisheta-matches";
 import { getNishetaWeekAwards } from "@/lib/nisheta-week";
+import { getNishetaEloLeaderboard } from "@/lib/nisheta-elo";
 import { buildMatchHeadline } from "@/lib/match-headline";
 import SyncButton from "@/components/SyncButton";
 import NishetaThisWeek from "@/components/NishetaThisWeek";
@@ -45,28 +46,26 @@ export default async function DashboardPage() {
   const nisheta = await getNishetaGroupStats();
   const week = await getNishetaWeekAwards();
 
+  const eloLeaderboard = await getNishetaEloLeaderboard(players.map((player) => player.id));
+  const eloMap = new Map(eloLeaderboard.map((player) => [player.playerId, player]));
   const playerForm = await Promise.all(
     players.map(async (p) => {
-      const matches = await prisma.matchPlayer.findMany({
-        where: { playerId: p.id },
-        orderBy: { match: { startTime: "desc" } },
-        take: 15,
-      });
-      const wins = matches.filter((m) => m.win).length;
-      const rating = matches.length > 0 ? Math.round((wins / matches.length) * 100) : null;
+      const matches = await prisma.matchPlayer.findMany({ where: { playerId: p.id }, orderBy: { match: { startTime: "desc" } }, take: 15 });
+      const elo = eloMap.get(p.id);
       const avgK = matches.length > 0 ? (matches.reduce((s, m) => s + m.kills, 0) / matches.length).toFixed(1) : "—";
       const avgD = matches.length > 0 ? (matches.reduce((s, m) => s + m.deaths, 0) / matches.length).toFixed(1) : "—";
       const avgA = matches.length > 0 ? (matches.reduce((s, m) => s + m.assists, 0) / matches.length).toFixed(1) : "—";
-      return { ...p, rating, gamesCounted: matches.length, avgK, avgD, avgA };
+      return { ...p, rating: elo?.rating ?? null, gamesCounted: elo?.games ?? matches.length, avgK, avgD, avgA };
     })
   );
   playerForm.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
 
-  const playerStatsMap: Record<string, { games: number; winrate: number | null; avgK: string; avgD: string; avgA: string }> = {};
+  const playerStatsMap: Record<string, { games: number; winrate: number | null; elo: number | null; avgK: string; avgD: string; avgA: string }> = {};
   for (const p of playerForm) {
     playerStatsMap[p.id] = {
       games: p.gamesCounted,
       winrate: p.rating,
+      elo: p.rating,
       avgK: p.avgK,
       avgD: p.avgD,
       avgA: p.avgA,

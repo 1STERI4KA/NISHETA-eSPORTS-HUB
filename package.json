@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test:seo": "node --import tsx --test tests/seo.test.ts tests/match-headline.test.ts",
+    "test:seo": "node --import tsx --test tests/seo.test.ts tests/match-headline.test.ts tests/elo.test.ts",
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",

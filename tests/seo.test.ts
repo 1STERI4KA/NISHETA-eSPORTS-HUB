@@ -17,10 +17,11 @@ test("sitemap contains only public indexable routes", () => {
   const entries = sitemap();
   const urls = entries.map((entry) => entry.url);
 
-  assert.equal(entries.length, 11);
+  assert.equal(entries.length, 12);
   assert.ok(urls.includes("https://nisheta-e-sports-hub.vercel.app/"));
   assert.ok(urls.includes("https://nisheta-e-sports-hub.vercel.app/draft"));
   assert.ok(urls.includes("https://nisheta-e-sports-hub.vercel.app/gallery"));
+  assert.ok(urls.includes("https://nisheta-e-sports-hub.vercel.app/confessions"));
   assert.ok(!urls.some((url) => url.includes("/admin")));
   assert.ok(!urls.some((url) => url.includes("/api/")));
   assert.ok(!urls.some((url) => url.includes("/lobby")));

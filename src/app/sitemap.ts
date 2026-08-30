@@ -10,6 +10,7 @@ const publicRoutes = [
   { path: "/draft", priority: 0.9, changeFrequency: "daily" as const },
   { path: "/gallery", priority: 0.6, changeFrequency: "monthly" as const },
   { path: "/satire", priority: 0.6, changeFrequency: "daily" as const },
+  { path: "/confessions", priority: 0.7, changeFrequency: "daily" as const },
   { path: "/players", priority: 0.8, changeFrequency: "weekly" as const },
   { path: "/nisheta", priority: 0.7, changeFrequency: "weekly" as const },
   { path: "/nisheta/achievements", priority: 0.5, changeFrequency: "weekly" as const },

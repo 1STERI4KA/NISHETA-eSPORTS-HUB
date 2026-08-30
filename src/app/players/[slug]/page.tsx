@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { formatDuration, formatDate } from "@/lib/format";
 import { ACHIEVEMENTS, computeUnlockedAchievements } from "@/lib/achievements";
 import { computeChallengeCounts } from "@/lib/challenges";
+import { getPlayerElo } from "@/lib/nisheta-elo";
 import { buildMatchHeadline } from "@/lib/match-headline";
 import AvatarInitials from "@/components/AvatarInitials";
 
@@ -36,6 +37,13 @@ export default async function PlayerProfilePage({ params }: { params: { slug: st
     include: { match: true },
   });
   const recentMatches = matches.slice(0, 20);
+  const elo = await getPlayerElo(player.id);
+  const eloHistory = elo?.history.slice(-20) ?? [];
+  const eloValues = eloHistory.map((point) => point.rating);
+  const eloMin = eloValues.length ? Math.min(...eloValues) : 1000;
+  const eloMax = eloValues.length ? Math.max(...eloValues) : 1000;
+  const eloRange = Math.max(1, eloMax - eloMin);
+  const eloPoints = eloHistory.map((point, index) => `${(index / Math.max(1, eloHistory.length - 1)) * 600},${150 - ((point.rating - eloMin) / eloRange) * 120}`).join(" ");
   const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
   const recentForm = matches.filter((match) => match.match.startTime >= fourteenDaysAgo);
   const totalGames = matches.length;
@@ -91,6 +99,8 @@ export default async function PlayerProfilePage({ params }: { params: { slug: st
         <article className="surface p-5"><p className="data-label">Средний K / D / A</p><p className="mt-3 text-lg font-semibold tracking-[-0.04em] text-graphite">{avgKills} / {avgDeaths} / {avgAssists}</p><p className="mt-1 text-xs text-graphite-muted">по последним {recentMatches.length || "—"} матчам</p></article>
         <article className="surface p-5"><p className="data-label">Средний GPM / XPM</p><p className="mt-3 text-lg font-semibold tracking-[-0.04em] text-graphite">{avgGpm} / {avgXpm}</p><p className="mt-1 text-xs text-graphite-muted">только по валидным данным</p></article>
       </section>
+
+      <section className="surface p-6"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="data-label">NISHETA Power Ranking</p><h2 className="mt-1 text-lg font-semibold tracking-[-0.04em] text-graphite">Elo по матчам</h2><p className="mt-2 text-xs leading-5 text-graphite-muted">Стартовый рейтинг — 1000. После каждой синхронизированной игры рейтинг меняется относительно силы обеих сторон.</p></div><div className="rounded-2xl bg-paper-muted/70 px-4 py-3 text-right"><p className="data-label">Текущий Elo</p><p className="mt-1 text-2xl font-semibold tracking-[-0.06em] text-graphite">{elo?.rating ?? "—"}</p></div></div>{eloHistory.length > 0 ? <div className="mt-6 overflow-hidden rounded-2xl bg-paper-muted/55 p-3"><svg viewBox="0 0 600 180" className="h-44 w-full" role="img" aria-label={`История Elo игрока ${player.nickname}`} preserveAspectRatio="none"><line x1="0" y1="150" x2="600" y2="150" stroke="currentColor" className="text-graphite/10"/><line x1="0" y1="90" x2="600" y2="90" stroke="currentColor" className="text-graphite/10"/><line x1="0" y1="30" x2="600" y2="30" stroke="currentColor" className="text-graphite/10"/><polyline fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-[#957752]" points={eloPoints}/>{eloHistory.map((point, index) => <circle key={`${point.matchId}-${index}`} cx={(index / Math.max(1, eloHistory.length - 1)) * 600} cy={150 - ((point.rating - eloMin) / eloRange) * 120} r="4" fill="currentColor" className="text-[#957752]" />)}</svg><div className="mt-2 flex justify-between text-[10px] text-graphite-muted"><span>{eloHistory.length} матчей в истории</span><span>{eloMin} — {eloMax}</span></div></div> : <div className="mt-5 rounded-2xl border border-dashed border-hairline p-5 text-sm text-graphite-muted">После первой полноценной синхронизированной игры здесь появится график рейтинга.</div>}</section>
 
       <section className="grid gap-5 lg:grid-cols-2">
         <article className="surface p-6"><p className="data-label">Любимые герои</p><h2 className="mt-1 text-lg font-semibold tracking-[-0.04em] text-graphite">На ком играет чаще всего</h2>{favoriteHeroes.length === 0 ? <p className="mt-5 text-sm text-graphite-muted">Пока нет матчей для расчёта пула.</p> : <ol className="mt-5 divide-y divide-hairline">{favoriteHeroes.map((hero, index) => <li key={hero.heroName} className="flex items-center justify-between py-3 first:pt-0 last:pb-0"><span className="text-sm font-semibold text-graphite"><span className="mr-3 text-xs text-graphite-muted">{index + 1}</span>{hero.heroName}</span><span className="text-xs text-graphite-muted">{hero.games} игр · <strong className="text-graphite">{hero.winrate}%</strong></span></li>)}</ol>}</article>
